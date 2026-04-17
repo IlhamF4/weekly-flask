@@ -6,3 +6,7 @@ app = Flask(__name__)
 def hello():
 	return jsonify({"message": "hello world"})
 	
+tasks = []
+@app.route("/tasks")
+def get_tasks():
+	return jsonify(tasks)
