@@ -7,17 +7,18 @@ app = Flask(__name__)
 def hello():
 	return jsonify({"message": "hello world"})
 
-@app.route("/tasks",methods=["GET","POST"])
-def tasks_route():
-	if request.method == "GET":
-		return jsonify(get_tasks())
-	elif request.method == "POST":
-		title = request.args.get("title")
-		if not title:
-			return jsonify({"error": "title required"}),400
+@app.route("/tasks",methods=["GET"])
+def tasks_get():
+	return jsonify(get_tasks())
+
+@app.route("/tasks",methods=["POST"])
+def task_add():
+	title = request.args.get("title")
+	if not title:
+		return jsonify({"error": "title required"}),400
 		
-		result = add_task(title)
-		return jsonify({"message": "added", "task": result})
+	result = add_task(title)
+	return jsonify({"message": "added", "task": result})
 
 @app.route("/tasks/<int:task_id>",methods=["PUT"])
 def task_update(task_id):
