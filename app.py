@@ -14,7 +14,8 @@ def tasks_route():
 	elif request.method == "POST":
 		title = request.args.get("title")
 		if not title:
-			return {"error": "title required"},400
+			return jsonify({"error": "title required"}),400
+		
 		result = add_task(title)
 		return jsonify({"message": "added", "task": result})
 
@@ -22,21 +23,21 @@ def tasks_route():
 def task_update(task_id):
 	title = request.args.get("title")
 	if not title:
-		return {"error": "title required"},400
+		return jsonify({"error": "title required"}),400
 		
 	result = update_task(task_id,title)
 	if result is None:
-		return {"error": "id not found"},404
-	else:
-		return jsonify({"message": "updated", "task": result})
+		return jsonify({"error": "id not found"}),404
+	
+	return jsonify({"message": "updated", "task": result})
 
 @app.route("/tasks/<int:task_id>",methods=["DELETE"])
 def task_delete(task_id):
 	result = delete_task(task_id)
 	if result is None:
-		return {"error": "id not found"},404
-	else:
-		return jsonify({"message": "deleted", "task": result})
+		return jsonify({"error": "id not found"}),404
+	
+	return jsonify({"message": "deleted", "task": result})
 		
 if __name__ == "__main__":
 	app.run(debug=True)
