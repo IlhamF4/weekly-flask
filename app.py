@@ -8,11 +8,11 @@ def hello():
 	return jsonify({"message": "hello world"})
 
 @app.route("/tasks",methods=["GET"])
-def tasks_get():
+def get_tasks_route():
 	return jsonify(get_tasks())
 
 @app.route("/tasks",methods=["POST"])
-def task_add():
+def create_task_route():
 	title = request.args.get("title")
 	if not title:
 		return jsonify({"error": "title required"}),400
@@ -21,19 +21,24 @@ def task_add():
 	return jsonify({"message": "added", "task": result})
 
 @app.route("/tasks/<int:task_id>",methods=["PUT"])
-def task_update(task_id):
+def update_task_route(task_id):
 	title = request.args.get("title")
-	if not title:
-		return jsonify({"error": "title required"}),400
-		
-	result = update_task(task_id,title)
+	done = request.args.get("done")
+	if title is None and done is None:
+		return jsonify({"error": "no data provided"}),400
+	
+	if done is not None:
+		done = done.lower() == "true"
+	print(title)
+	print(done)
+	result = update_task(task_id,title,done)
 	if result is None:
 		return jsonify({"error": "id not found"}),404
 	
 	return jsonify({"message": "updated", "task": result})
 
 @app.route("/tasks/<int:task_id>",methods=["DELETE"])
-def task_delete(task_id):
+def delete_task_route(task_id):
 	result = delete_task(task_id)
 	if result is None:
 		return jsonify({"error": "id not found"}),404
