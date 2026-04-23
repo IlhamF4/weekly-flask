@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request
-from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import BadRequest, NotFound
 from logic import get_tasks, add_task, update_task, delete_task
 
 app = Flask(__name__)
@@ -14,26 +14,32 @@ def get_tasks_route():
 	
 def access_json():
 	if not request.is_json:
-		return jsonify({"error": "content must be json"}),400
+		raise BadRequest("content must be json")
 	
 	try:
 		data = request.get_json()
 	except BadRequest:
-		return jsonify({"error": "Invalid json"}),400
+		raise BadRequest("Invalid json")
+	
+	if data is None:
+		raise BadRequest("request body is required")
 	
 	if data == {}:
-		return jsonify({"error": "this is empty body"}),400
+		raise BadRequest("request body cannot be empty")
 	return data
 
 @app.route("/tasks",methods=["POST"])
 def create_task_route():
 	data = access_json()
 	if "title" not in data:
-		return jsonify({"error": "title required"}),400
+		raise BadRequest("title is required")
 	
-	title = data["title"]
+	if not isinstance(data["title"],str):
+		raise BadRequest("title must be string")
+	
+	title = data["title"].strip()	
 	if title == "":
-		return jsonify({"error": "title cannot be empty"}),400
+		raise BadRequest("title cannot be empty")
 		
 	result = add_task(title)
 	return jsonify({"message": "added", "task": result})
@@ -45,34 +51,33 @@ def update_task_route(task_id):
 	
 	data = access_json()
 	if "title" not in data and "done" not in data:
-		return jsonify({"error": "please input title or done"})
+		raise BadRequest("title or done is required")
 	
 	if "title" in data:
-		title = data["title"]
+		if not isinstance(data["title"],str):
+			raise BadRequest("title must be string")
+		
+		title = data["title"].strip()
+		if title == "":
+			raise BadRequest("title cannot be empty")
+			
 	if "done" in data:
-		done = is_bool(data)
+		if not isinstance(data["done"],bool):
+			raise BadRequest("done must be boolean")
+		done = data["done"]
 	
 	result = update_task(task_id,title,done)
 	if result is None:
-		return jsonify({"error": "id not found"}),404
+		raise NotFound("task not found")
 	
 	return jsonify({"message": "updated", "task": result})
 
-def is_bool(data):
-	value = data["done"].lower()
-	
-	if value == "true":
-		return True
-	elif value == "false":
-		return False
-	else:
-		return jsonify({"error": "value of done must be either true or false"}),400
 
 @app.route("/tasks/<int:task_id>",methods=["DELETE"])
 def delete_task_route(task_id):
 	result = delete_task(task_id)
 	if result is None:
-		return jsonify({"error": "id not found"}),404
+		raise NotFound("task not found")
 	
 	return jsonify({"message": "deleted", "task": result})
 		
