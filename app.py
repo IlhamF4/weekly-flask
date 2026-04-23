@@ -12,7 +12,7 @@ def hello():
 def get_tasks_route():
 	return jsonify(get_tasks())
 	
-def access_json():
+def parse_json():
 	if not request.is_json:
 		raise BadRequest("content must be json")
 	
@@ -27,20 +27,29 @@ def access_json():
 	if data == {}:
 		raise BadRequest("request body cannot be empty")
 	return data
+	
+def validate_title(value):
+	if not isinstance(value,str):
+		raise BadRequest("title must be a string")
+	
+	title = value.strip()	
+	if title == "":
+		raise BadRequest("title cannot be empty")
+	return title
+	
+def validate_done(value):
+	if not isinstance(value,bool):
+		raise BadRequest("done must be a boolean")
+	return value
 
 @app.route("/tasks",methods=["POST"])
 def create_task_route():
-	data = access_json()
+	data = parse_json()
+	
 	if "title" not in data:
 		raise BadRequest("title is required")
 	
-	if not isinstance(data["title"],str):
-		raise BadRequest("title must be string")
-	
-	title = data["title"].strip()	
-	if title == "":
-		raise BadRequest("title cannot be empty")
-		
+	title = validate_title(data["title"])
 	result = add_task(title)
 	return jsonify({"message": "added", "task": result})
 
@@ -49,22 +58,14 @@ def update_task_route(task_id):
 	title = None
 	done = None
 	
-	data = access_json()
+	data = parse_json()
 	if "title" not in data and "done" not in data:
 		raise BadRequest("title or done is required")
 	
 	if "title" in data:
-		if not isinstance(data["title"],str):
-			raise BadRequest("title must be string")
-		
-		title = data["title"].strip()
-		if title == "":
-			raise BadRequest("title cannot be empty")
-			
+		title = validate_title(data["title"])
 	if "done" in data:
-		if not isinstance(data["done"],bool):
-			raise BadRequest("done must be boolean")
-		done = data["done"]
+		done = validate_done(data["done"])
 	
 	result = update_task(task_id,title,done)
 	if result is None:
