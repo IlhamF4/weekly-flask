@@ -40,20 +40,33 @@ def create_task_route():
 
 @app.route("/tasks/<int:task_id>",methods=["PUT"])
 def update_task_route(task_id):
-	title = request.args.get("title")
-	done = request.args.get("done")
-	if title is None and done is None:
-		return jsonify({"error": "no data provided"}),400
+	title = None
+	done = None
 	
-	if done is not None:
-		done = done.lower() == "true"
-	print(title)
-	print(done)
+	data = access_json()
+	if "title" not in data and "done" not in data:
+		return jsonify({"error": "please input title or done"})
+	
+	if "title" in data:
+		title = data["title"]
+	if "done" in data:
+		done = is_bool(data)
+	
 	result = update_task(task_id,title,done)
 	if result is None:
 		return jsonify({"error": "id not found"}),404
 	
 	return jsonify({"message": "updated", "task": result})
+
+def is_bool(data):
+	value = data["done"].lower()
+	
+	if value == "true":
+		return True
+	elif value == "false":
+		return False
+	else:
+		return jsonify({"error": "value of done must be either true or false"}),400
 
 @app.route("/tasks/<int:task_id>",methods=["DELETE"])
 def delete_task_route(task_id):

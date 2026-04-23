@@ -11,7 +11,7 @@ def add_task(title):
 	data.current_id += 1
 	return new_task
 
-def update_task(task_id, title=None, done=None):
+def update_task(task_id, title, done):
 	task_index = find_task_index(task_id)
 	if task_index is None:
 		return None
