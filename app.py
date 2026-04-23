@@ -41,31 +41,42 @@ def validate_done(value):
 	if not isinstance(value,bool):
 		raise BadRequest("done must be a boolean")
 	return value
+	
+def validate_create_task(data):
+	if "title" not in data:
+		raise BadRequest("title is required")
+	title = validate_title(data["title"])
+	return {"title": title}
+
+def validate_update_task(data):
+	if "title" not in data and "done" not in data:
+		raise BadRequest("title or done is required")
+		
+	title = None
+	done = None
+	if "title" in data:
+		title = validate_title(data["title"])
+	if "done" in data:
+		done = validate_done(data["done"])
+	return {"title": title, "done": done}
 
 @app.route("/tasks",methods=["POST"])
 def create_task_route():
 	data = parse_json()
 	
-	if "title" not in data:
-		raise BadRequest("title is required")
+	validated = validate_create_task(data)
+	title = validated["title"]
 	
-	title = validate_title(data["title"])
 	result = add_task(title)
 	return jsonify({"message": "added", "task": result})
 
 @app.route("/tasks/<int:task_id>",methods=["PUT"])
 def update_task_route(task_id):
-	title = None
-	done = None
-	
 	data = parse_json()
-	if "title" not in data and "done" not in data:
-		raise BadRequest("title or done is required")
 	
-	if "title" in data:
-		title = validate_title(data["title"])
-	if "done" in data:
-		done = validate_done(data["done"])
+	validated = validate_update_task(data)
+	title = validated["title"]
+	done = validated["done"]
 	
 	result = update_task(task_id,title,done)
 	if result is None:
