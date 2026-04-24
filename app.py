@@ -69,7 +69,7 @@ def hello():
 
 @app.route("/tasks", methods=["GET"])
 def get_tasks_route():
-	return jsonify(get_tasks())
+	return jsonify({"message": "list of tasks", "task": get_tasks()}),200
 
 
 @app.route("/tasks", methods=["POST"])
@@ -81,7 +81,7 @@ def create_task_route():
 	
 	result = add_task(title)
 	
-	return jsonify({"message": "added", "task": result})
+	return jsonify({"message": "added", "task": result}),201
 
 
 @app.route("/tasks/<int:task_id>",methods=["PUT"])
@@ -97,7 +97,7 @@ def update_task_route(task_id):
 	if result is None:
 		raise NotFound("task not found")
 	
-	return jsonify({"message": "updated", "task": result})
+	return jsonify({"message": "updated", "task": result}),200
 
 
 @app.route("/tasks/<int:task_id>", methods=["DELETE"])
@@ -107,7 +107,7 @@ def delete_task_route(task_id):
 	if result is None:
 		raise NotFound("task not found")
 	
-	return jsonify({"message": "deleted", "task": result})
+	return jsonify({"message": "deleted", "task": result}),200
 	
 			
 if __name__ == "__main__":

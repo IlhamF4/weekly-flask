@@ -32,5 +32,7 @@ def delete_task(task_id):
 	if task is None:
 		return None
 		
-	return data.tasks.pop(task_id)
+	del data.tasks[task_id]
+	
+	return task
 	
