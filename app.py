@@ -33,7 +33,7 @@ def validate_title(value):
 	return title
 
 
-def validate_bool(value):
+def parse_bool(value):
 	if value is None:
 		return None
 		
@@ -56,18 +56,44 @@ def validate_int(value):
 		
 	return int(value)
 		
-def validate_page(value):
+def parse_page(value):
 	if value is None:
 		return 1
 	
 	return validate_int(value)
 	
 
-def validate_limit(value):
+def parse_limit(value):
 	if value is None:
 		return 10
 	
 	return validate_int(value)
+
+
+def parse_sort(value):
+	if value is None:
+		return None
+	
+	value = value.lower()
+	
+	if value == "asc":
+		return "ASC"
+	elif value == "desc":
+		return "DESC"
+	else:
+		raise BadRequest("input must be either asc or desc")
+		
+
+def parse_search(value):
+	if value is None:
+		return None
+	
+	value = value.strip()
+	
+	if value == "":
+		raise BadRequest("search cannot be empty")
+	
+	return value
 	
 	
 def validate_done(value):
@@ -90,14 +116,22 @@ def validate_get_tasks():
 	done = request.args.get("done")
 	page = request.args.get("page")
 	limit = request.args.get("limit")
+	sort = request.args.get("sort")
+	search = request.args.get("search")
 	
 	if done is not None:
-		done = validate_bool(done)
+		done = parse_bool(done)
+		
+	if search is not None:
+		search = parse_search(search)
+		
+	if sort is not None:
+		sort = parse_sort(sort)
 	
-	page = validate_page(page)
-	limit = validate_limit(limit)
+	page = parse_page(page)
+	limit = parse_limit(limit)
 	
-	return {"done": done, "page": page, "limit": limit}
+	return {"done": done, "search": search, "sort": sort, "page": page, "limit": limit}
 
 
 def validate_update_task(data):
@@ -122,11 +156,14 @@ def hello():
 @app.route("/tasks", methods=["GET"])
 def get_tasks_route():
 	validated = validate_get_tasks()
+	
 	done = validated["done"]
+	search = validated["search"]
+	sort = validated["sort"]
 	page = validated["page"]
 	limit = validated["limit"]
 	
-	tasks = get_tasks(done, page, limit)
+	tasks = get_tasks(done, search, sort, page, limit)
 	
 	return jsonify({"tasks": tasks}),200
 
@@ -136,6 +173,7 @@ def create_task_route():
 	data = parse_json()
 	
 	validated = validate_create_task(data)
+	
 	title = validated["title"]
 	
 	result = add_task(title)
@@ -148,6 +186,7 @@ def update_task_route(task_id):
 	data = parse_json()
 	
 	validated = validate_update_task(data)
+	
 	title = validated["title"]
 	done = validated["done"]
 	

@@ -64,19 +64,29 @@ def add_task(title):
 	return task
 
 
-def get_tasks(done=None, page=1, limit=10):
+def get_tasks(done=None, sort=None, search=None, page=1, limit=10):
 	conn = get_connection()
 	set_row_factory(conn)
 	cur = conn.cursor()
 	
 	offset = (page - 1) * limit
 	
-	query = "SELECT id, title, done FROM tasks"
+	query = "SELECT id, title, done FROM tasks "
 	params = {}
+	conditions = []
 	
 	if done is not None:
-		query += " WHERE done = :done"
+		conditions.append("done = :done")
 		params["done"] = int(done)
+	if search is not None:
+		conditions.append("title LIKE :search")
+		params["search"] = f"%{search}%"
+		
+	if conditions:
+		query += " WHERE " + " AND ".join(conditions)
+		
+	if sort is not None:
+		query += f" ORDER BY id {sort} "
 	
 	query += " LIMIT :limit OFFSET :offset"
 	params["limit"] = limit
