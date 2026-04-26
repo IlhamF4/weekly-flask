@@ -31,6 +31,44 @@ def validate_title(value):
 		raise BadRequest("title cannot be empty")
 		
 	return title
+
+
+def validate_bool(value):
+	if value is None:
+		return None
+		
+	value = value.lower()
+	
+	if value == "true":
+		return True
+	elif value == "false":
+		return False
+	else:
+		raise BadRequest("Input must be either true or false")
+		
+		
+def validate_int(value):
+	if value is None:
+		return None
+	
+	if not value.isdecimal() or value == "0":
+		raise BadRequest("input must be a positive integer")
+		
+	return int(value)
+		
+def validate_page(value):
+	if value is None:
+		return 1
+	
+	return validate_int(value)
+	
+
+def validate_limit(value):
+	if value is None:
+		return 10
+	
+	return validate_int(value)
+	
 	
 def validate_done(value):
 	if not isinstance(value,bool):
@@ -46,6 +84,20 @@ def validate_create_task(data):
 	title = validate_title(data["title"])
 	
 	return {"title": title}
+
+
+def validate_get_tasks():
+	done = request.args.get("done")
+	page = request.args.get("page")
+	limit = request.args.get("limit")
+	
+	if done is not None:
+		done = validate_bool(done)
+	
+	page = validate_page(page)
+	limit = validate_limit(limit)
+	
+	return {"done": done, "page": page, "limit": limit}
 
 
 def validate_update_task(data):
@@ -69,7 +121,14 @@ def hello():
 
 @app.route("/tasks", methods=["GET"])
 def get_tasks_route():
-	return jsonify({"message": "list of tasks", "task": get_tasks()}),200
+	validated = validate_get_tasks()
+	done = validated["done"]
+	page = validated["page"]
+	limit = validated["limit"]
+	
+	tasks = get_tasks(done, page, limit)
+	
+	return jsonify({"tasks": tasks}),200
 
 
 @app.route("/tasks", methods=["POST"])

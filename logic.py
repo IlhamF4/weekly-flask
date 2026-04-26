@@ -64,13 +64,27 @@ def add_task(title):
 	return task
 
 
-def get_tasks():
+def get_tasks(done=None, page=1, limit=10):
 	conn = get_connection()
 	set_row_factory(conn)
 	cur = conn.cursor()
 	
-	cur.execute("SELECT id, title, done FROM tasks")
+	offset = (page - 1) * limit
+	
+	query = "SELECT id, title, done FROM tasks"
+	params = {}
+	
+	if done is not None:
+		query += " WHERE done = :done"
+		params["done"] = int(done)
+	
+	query += " LIMIT :limit OFFSET :offset"
+	params["limit"] = limit
+	params["offset"] = offset
+
+	cur.execute(query, params)
 	tasks = row_to_list(cur.fetchall())
+	
 	conn.close()
 	
 	return tasks
