@@ -1,5 +1,8 @@
 import sqlite3
 
+FORBIDDEN = "FORBIDDEN"
+NOT_FOUND = "NOT_FOUND"
+
 def get_connection():
 	return sqlite3.connect("task.db")
 
@@ -36,7 +39,7 @@ def find_task(task_id):
 	conn.close()
 	
 	if task is None:
-		return None
+		return NOT_FOUND
 		
 	return tasks_row_dict(task)
 	
@@ -53,7 +56,7 @@ def find_user(user_id):
 	conn.close()
 	
 	if result is None:
-		return None
+		return NOT_FOUND
 	
 	return users_row_dict(result)
 
@@ -65,7 +68,8 @@ def init_db():
 	CREATE TABLE IF NOT EXISTS tasks(
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		title TEXT,
-		done BOOLEAN
+		done BOOLEAN,
+		user_id INTEGER
 	)
 	""")
 	
@@ -115,8 +119,8 @@ def update_user(user_id, username):
 	
 	user = find_user(user_id)
 	
-	if user is None:
-		return None
+	if user == NOT_FOUND:
+		return NOT_FOUND
 	
 	cur.execute("UPDATE users SET username = :username WHERE user_id = :user_id", {"username": username, "user_id": user_id})
 	conn.commit()
@@ -136,8 +140,8 @@ def delete_user(user_id):
 	
 	user = find_user(user_id)
 	
-	if user is None:
-		return None
+	if user == NOT_FOUND:
+		return NOT_FOUND
 	
 	cur.execute("DELETE FROM users WHERE user_id = :user_id", {"user_id": user_id})
 	
@@ -188,7 +192,6 @@ def get_tasks(user_id, done=None, search=None, sort=None, page=1, limit=10):
 		
 	if sort is not None:
 		query += f" ORDER BY id {sort} "
-		#params["sort"] = f"{sort}"
 	
 	query += " LIMIT :limit OFFSET :offset"
 	params["limit"] = limit
@@ -202,25 +205,32 @@ def get_tasks(user_id, done=None, search=None, sort=None, page=1, limit=10):
 	return tasks
 	
 	
-def update_task(task_id, title, done):
+def update_task(user_id, task_id, title, done):
 	conn = get_connection()
 	set_row_factory(conn)
 	cur = conn.cursor()
 	
 	task = find_task(task_id)
 	
-	if task is None:
-		return None
+	if task == NOT_FOUND:
+		return NOT_FOUND
+	
+	if user_id != task["user_id"]:
+		return FORBIDDEN
 		
 	if title is not None:
 		cur.execute("UPDATE tasks SET title = :title WHERE id = :id", {"title": title, "id": task_id})
 	if done is not None:
 		cur.execute("UPDATE tasks SET done = :done WHERE id = :id", {"done": done, "id": task_id})
-	
 	conn.commit()
+	
+	cur.execute("SELECT id, title, done, user_id FROM tasks WHERE id = :id", {"id": task_id})
+	
+	task = cur.fetchone()
+	
 	conn.close()
 	
-	return find_task(task_id)
+	return tasks_row_dict(task)
 
 	
 def delete_task(user_id, task_id):
@@ -230,15 +240,15 @@ def delete_task(user_id, task_id):
 	
 	task = find_task(task_id)
 	
-	if task is None:
-		return None
+	if task == NOT_FOUND:
+		return NOT_FOUND
 		
 	if user_id != task["user_id"]:
-		return False
+		return FORBIDDEN
 		
 	cur.execute("DELETE FROM tasks WHERE id = :id", {"id": task_id})
 	
 	conn.commit()
 	conn.close()
 	
-	return task
+	return tasks_row_dict(task)
