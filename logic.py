@@ -41,17 +41,21 @@ def find_task(task_id):
 	return tasks_row_dict(task)
 	
 
-def check_user(user_id):
+def find_user(user_id):
 	conn = get_connection()
+	set_row_factory(conn)
 	cur = conn.cursor()
 	
-	cur.execute("SELECT id FROM users WHERE id = :id", {"id": user_id})
+	cur.execute("SELECT user_id, username FROM users WHERE user_id = :user_id", {"user_id": user_id})
 	
 	result = cur.fetchone()
 	
 	conn.close()
 	
-	return result
+	if result is None:
+		return None
+	
+	return users_row_dict(result)
 
 def init_db():
 	conn = get_connection()
@@ -102,7 +106,45 @@ def get_users():
 	conn.close()
 	
 	return users
+
+
+def update_user(user_id, username):
+	conn = get_connection()
+	set_row_factory(conn)
+	cur = conn.cursor()
 	
+	user = find_user(user_id)
+	
+	if user is None:
+		return None
+	
+	cur.execute("UPDATE users SET username = :username WHERE user_id = :user_id", {"username": username, "user_id": user_id})
+	conn.commit()
+	
+	cur.execute("SELECT user_id, username FROM users WHERE user_id = :user_id", {"user_id": user_id})
+	
+	user = cur.fetchone()
+	
+	conn.close()
+	
+	return users_row_dict(user)
+
+def delete_user(user_id):
+	conn = get_connection()
+	set_row_factory(conn)
+	cur = conn.cursor()
+	
+	user = find_user(user_id)
+	
+	if user is None:
+		return None
+	
+	cur.execute("DELETE FROM users WHERE user_id = :user_id", {"user_id": user_id})
+	
+	conn.commit()
+	conn.close()
+	
+	return user
 	
 # Tasks area
 def add_task(title):
@@ -114,7 +156,7 @@ def add_task(title):
 	conn.commit()
 	
 	cur.execute("SELECT id, title, done FROM tasks WHERE id = :id", {"id": cur.lastrowid})
-	task = tasks_row_dict(cur.fetchone())
+	task = cur.fetchone()
 	conn.close()
 	
 	return task

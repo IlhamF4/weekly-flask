@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request
 from werkzeug.exceptions import BadRequest, NotFound, HTTPException
-from logic import get_tasks, add_task, update_task, delete_task, init_db, check_user, add_user, get_users
+from logic import get_tasks, add_task, update_task, delete_task, init_db, find_user, add_user, get_users, update_user, delete_user
 
 app = Flask(__name__)
 
@@ -31,7 +31,7 @@ def validate_user_id(value):
 	if value <= 0:
 		raise BadRequest("user id must be a positive integer")
 	
-	if check_user(value) is None:
+	if find_user(value) is None:
 		raise NotFound("user not found")
 	
 	return value
@@ -143,11 +143,19 @@ def validate_username(value):
 	return value
 
 def validate_add_user():
-	username = request.args.get("username")
+	username = validate_username(request.args.get("username"))
 	
-	validated_username = validate_username(username)
+	return {"username": username}
+
+
+def validate_update_user(user_id):
+	username = validate_username(request.args.get("username"))
 	
-	return {"username": validated_username}
+	if find_user(user_id) is None:
+		raise NotFound("user_id not found")
+	
+	return {"username": username}
+	
 
 # Validation of tasks route
 def validate_create_task(data):
@@ -206,29 +214,40 @@ def hello():
 def add_user_route():
 	validated = validate_add_user()
 	
-	user = add_user(validated["username"])
+	result = add_user(validated["username"])
 	
-	return jsonify({"data": user, "message": "user added"})
+	return jsonify({"data": result, "message": "user added"})
 
 
 @app.route("/users", methods=["GET"])
 def get_users_route():
-	users = get_users()
+	result = get_users()
 	
 	return jsonify({
-		"data": users,
-		"count": len(users)
+		"data": result,
+		"count": len(result)
 	})
 
 
-@app.route("/users", methods=["PUT"])
-def update_user_route():
-	pass
+@app.route("/users/<user_id>", methods=["PUT"])
+def update_user_route(user_id):
+	validated = validate_update_user(user_id)
+	
+	username = validated["username"]
+	
+	result = update_user(user_id, username)
+	
+	return jsonify({"data": result, "message": "user updated"})
 
 
-@app.route("/users", methods=["DELETE"])
-def delete_user_route():
-	pass
+@app.route("/users/<user_id>", methods=["DELETE"])
+def delete_user_route(user_id):
+	result = delete_user(user_id)
+	
+	if result is None:
+		raise NotFound("user not found")
+	
+	return jsonify({"data": result, "message": "user deleted"})
 
 
 #Tasks area
