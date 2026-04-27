@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request
-from werkzeug.exceptions import BadRequest, NotFound, HTTPException
+from werkzeug.exceptions import BadRequest, NotFound, HTTPException, Forbidden
 from logic import get_tasks, add_task, update_task, delete_task, init_db, find_user, add_user, get_users, update_user, delete_user
 
 app = Flask(__name__)
@@ -25,11 +25,7 @@ def parse_json():
 
 # Helper users
 def validate_user_id(value):
-	if not isinstance(value, int):
-		raise BadRequest("invalid type")
-	
-	if value <= 0:
-		raise BadRequest("user id must be a positive integer")
+	value = validate_int(value)
 	
 	if find_user(value) is None:
 		raise NotFound("user not found")
@@ -119,6 +115,16 @@ def validate_done(value):
 		
 	return value
 	
+
+#def check_authorization(user_id, task_id):
+#	user_id = get_user_id()
+#	task = find_task(task_id)
+#	
+#	if task is None:
+#		raise NotFound("task not found")
+#	
+#	return user_id == task["user_id"]
+	
 # Validation users
 def get_user_id():
 	if "X-User-Id" not in request.headers:
@@ -126,7 +132,7 @@ def get_user_id():
 		
 	user_id = request.headers.get("X-User-Id")
 	
-	user_id = validate_user(user_id)
+	user_id = validate_user_id(user_id)
 	
 	return user_id
 
@@ -163,11 +169,13 @@ def validate_create_task(data):
 		raise BadRequest("title is required")
 		
 	title = validate_title(data["title"])
+	user_id = get_user_id()
 	
-	return {"title": title}
+	return {"user_id": user_id, "title": title}
 
 
 def validate_get_tasks():
+	user_id = get_user_id()
 	done = request.args.get("done")
 	page = request.args.get("page")
 	limit = request.args.get("limit")
@@ -186,7 +194,7 @@ def validate_get_tasks():
 	page = parse_page(page)
 	limit = parse_limit(limit)
 	
-	return {"done": done, "search": search, "sort": sort, "page": page, "limit": limit}
+	return {"user_id": user_id, "done": done, "search": search, "sort": sort, "page": page, "limit": limit}
 
 
 def validate_update_task(data):
@@ -202,11 +210,15 @@ def validate_update_task(data):
 		
 	return {"title": title, "done": done}
 
+def validate_delete_task():
+	user_id = get_user_id()
+	
+	return {"user_id": user_id}
+
 
 @app.route("/")
 def hello():
-	user_id = get_user_id()
-	return jsonify({"message": "hello world", "data": user_id})
+	return jsonify({"message": "hello world"})
 
 
 # Users area
@@ -258,8 +270,9 @@ def create_task_route():
 	validated = validate_create_task(data)
 	
 	title = validated["title"]
+	user_id = validated["user_id"]
 	
-	result = add_task(title)
+	result = add_task(user_id, title)
 	
 	return jsonify({
 		"data": result,
@@ -271,13 +284,14 @@ def create_task_route():
 def get_tasks_route():
 	validated = validate_get_tasks()
 	
+	user_id = validated["user_id"]
 	done = validated["done"]
 	search = validated["search"]
 	sort = validated["sort"]
 	page = validated["page"]
 	limit = validated["limit"]
 	
-	result = get_tasks(done, search, sort, page, limit)
+	result = get_tasks(user_id, done, search, sort, page, limit)
 	
 	return jsonify({
 		"data": result,
@@ -311,7 +325,13 @@ def update_task_route(task_id):
 
 @app.route("/tasks/<int:task_id>", methods=["DELETE"])
 def delete_task_route(task_id):
-	result = delete_task(task_id)
+	validated = validate_delete_task()
+	
+	user_id = validated["user_id"]
+	result = delete_task(user_id, task_id)
+	
+	if result == False:
+		raise Forbidden("forbidden to modify task")
 	
 	if result is None:
 		raise NotFound("task not found")
