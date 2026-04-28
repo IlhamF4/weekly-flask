@@ -94,9 +94,11 @@ def add_user(username):
 	conn.commit()
 	
 	cur.execute("SELECT user_id, username FROM users WHERE user_id = :user_id", {"user_id": cur.lastrowid})
-	user = users_row_dict(cur.fetchone())
+	user = cur.fetchone()
 	
-	return user
+	conn.close()
+	
+	return users_row_dict(user)
 
 
 def get_users():
@@ -105,11 +107,11 @@ def get_users():
 	cur = conn.cursor()
 	
 	cur.execute("SELECT user_id, username FROM users")
-	users = users_row_list(cur.fetchall())
+	users = cur.fetchall()
 	
 	conn.close()
 	
-	return users
+	return users_row_list(users)
 
 
 def update_user(user_id, username):
@@ -117,9 +119,13 @@ def update_user(user_id, username):
 	set_row_factory(conn)
 	cur = conn.cursor()
 	
-	user = find_user(user_id)
+	cur.execute("SELECT user_id, username FROM users WHERE user_id = :user_id", {"user_id": user_id})
 	
-	if user == NOT_FOUND:
+	user = cur.fetchone()
+	
+	#user = find_user(user_id)
+	
+	if user is None:
 		return NOT_FOUND
 	
 	cur.execute("UPDATE users SET username = :username WHERE user_id = :user_id", {"username": username, "user_id": user_id})
@@ -138,9 +144,13 @@ def delete_user(user_id):
 	set_row_factory(conn)
 	cur = conn.cursor()
 	
-	user = find_user(user_id)
+	cur.execute("SELECT user_id, username FROM users WHERE user_id = :user_id", {"user_id": user_id})
 	
-	if user == NOT_FOUND:
+	user = cur.fetchone()
+	
+	#user = find_user(user_id)
+	
+	if user is None:
 		return NOT_FOUND
 	
 	cur.execute("DELETE FROM users WHERE user_id = :user_id", {"user_id": user_id})
@@ -148,7 +158,7 @@ def delete_user(user_id):
 	conn.commit()
 	conn.close()
 	
-	return user
+	return users_row_dict(user)
 	
 # Tasks area
 def add_task(user_id, title):
@@ -171,15 +181,16 @@ def get_tasks(user_id, done=None, search=None, sort=None, page=1, limit=10):
 	set_row_factory(conn)
 	cur = conn.cursor()
 	
+	limit = max(1, min(limit, 100))
+	page = max(1, page)
 	offset = (page - 1) * limit
 	
 	query = "SELECT id, title, done, user_id FROM tasks "
 	params = {}
 	conditions = []
 	
-	if user_id is not None:
-		conditions.append("user_id = :user_id")
-		params["user_id"] = user_id
+	conditions.append("user_id = :user_id")
+	params["user_id"] = user_id
 	if done is not None:
 		conditions.append("done = :done")
 		params["done"] = int(done)
@@ -190,7 +201,9 @@ def get_tasks(user_id, done=None, search=None, sort=None, page=1, limit=10):
 	if conditions:
 		query += " WHERE " + " AND ".join(conditions)
 		
-	if sort is not None:
+	if sort is None:
+		query += " ORDER BY id ASC "
+	else:
 		query += f" ORDER BY id {sort} "
 	
 	query += " LIMIT :limit OFFSET :offset"
@@ -210,9 +223,12 @@ def update_task(user_id, task_id, title, done):
 	set_row_factory(conn)
 	cur = conn.cursor()
 	
-	task = find_task(task_id)
+	cur.execute("SELECT id, title, done, user_id FROM tasks WHERE id = :id", {"id": task_id})
+	task = cur.fetchone()
 	
-	if task == NOT_FOUND:
+	#task = find_task(task_id)
+	
+	if task is None:
 		return NOT_FOUND
 	
 	if user_id != task["user_id"]:
@@ -238,9 +254,12 @@ def delete_task(user_id, task_id):
 	set_row_factory(conn)
 	cur = conn.cursor()
 	
-	task = find_task(task_id)
+	cur.execute("SELECT id, title, done, user_id FROM tasks WHERE id = :id", {"id": task_id})
+	task = cur.fetchone()
 	
-	if task == NOT_FOUND:
+#	task = find_task(task_id)
+	
+	if task is None:
 		return NOT_FOUND
 		
 	if user_id != task["user_id"]:
