@@ -1,14 +1,5 @@
-import sqlite3
-
-FORBIDDEN = "FORBIDDEN"
-NOT_FOUND = "NOT_FOUND"
-
-def get_connection():
-	return sqlite3.connect("task.db")
-
-
-def set_row_factory(conn):
-	conn.row_factory = sqlite3.Row
+from db import get_connection, set_row_factory
+from errors import FORBIDDEN, NOT_FOUND
 
 
 def tasks_row_list(rows):
@@ -18,15 +9,6 @@ def tasks_row_list(rows):
 def tasks_row_dict(row):
 	return {"id": row["id"], "title": row["title"], "done": bool(row["done"]), "user_id": row["user_id"]}
 	
-	
-def users_row_list(rows):
-	return [users_row_dict(row) for row in rows]
-
-
-def users_row_dict(row):
-	return {"user_id": row["user_id"], "username": row["username"]}
-
-
 def find_task(task_id):
 	conn = get_connection()
 	set_row_factory(conn)
@@ -42,125 +24,7 @@ def find_task(task_id):
 		return NOT_FOUND
 		
 	return tasks_row_dict(task)
-	
 
-def find_user(user_id):
-	conn = get_connection()
-	set_row_factory(conn)
-	cur = conn.cursor()
-	
-	cur.execute("SELECT user_id, username FROM users WHERE user_id = :user_id", {"user_id": user_id})
-	
-	result = cur.fetchone()
-	
-	conn.close()
-	
-	if result is None:
-		return NOT_FOUND
-	
-	return users_row_dict(result)
-
-def init_db():
-	conn = get_connection()
-	cur = conn.cursor()
-	
-	cur.execute("""
-	CREATE TABLE IF NOT EXISTS tasks(
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		title TEXT,
-		done BOOLEAN,
-		user_id INTEGER
-	)
-	""")
-	
-	cur.execute("""
-		CREATE TABLE IF NOT EXISTS users(
-			user_id INTEGER PRIMARY KEY AUTOINCREMENT,
-			username TEXT
-		)
-	""")
-	
-	conn.commit()
-	conn.close()
-
-
-# Users area
-def add_user(username):
-	conn = get_connection()
-	set_row_factory(conn)
-	cur = conn.cursor()
-	
-	cur.execute("INSERT INTO users (username) VALUES (:username)", {"username": username})
-	conn.commit()
-	
-	cur.execute("SELECT user_id, username FROM users WHERE user_id = :user_id", {"user_id": cur.lastrowid})
-	user = cur.fetchone()
-	
-	conn.close()
-	
-	return users_row_dict(user)
-
-
-def get_users():
-	conn = get_connection()
-	set_row_factory(conn)
-	cur = conn.cursor()
-	
-	cur.execute("SELECT user_id, username FROM users")
-	users = cur.fetchall()
-	
-	conn.close()
-	
-	return users_row_list(users)
-
-
-def update_user(user_id, username):
-	conn = get_connection()
-	set_row_factory(conn)
-	cur = conn.cursor()
-	
-	cur.execute("SELECT user_id, username FROM users WHERE user_id = :user_id", {"user_id": user_id})
-	
-	user = cur.fetchone()
-	
-	#user = find_user(user_id)
-	
-	if user is None:
-		return NOT_FOUND
-	
-	cur.execute("UPDATE users SET username = :username WHERE user_id = :user_id", {"username": username, "user_id": user_id})
-	conn.commit()
-	
-	cur.execute("SELECT user_id, username FROM users WHERE user_id = :user_id", {"user_id": user_id})
-	
-	user = cur.fetchone()
-	
-	conn.close()
-	
-	return users_row_dict(user)
-
-def delete_user(user_id):
-	conn = get_connection()
-	set_row_factory(conn)
-	cur = conn.cursor()
-	
-	cur.execute("SELECT user_id, username FROM users WHERE user_id = :user_id", {"user_id": user_id})
-	
-	user = cur.fetchone()
-	
-	#user = find_user(user_id)
-	
-	if user is None:
-		return NOT_FOUND
-	
-	cur.execute("DELETE FROM users WHERE user_id = :user_id", {"user_id": user_id})
-	
-	conn.commit()
-	conn.close()
-	
-	return users_row_dict(user)
-	
-# Tasks area
 def add_task(user_id, title):
 	conn = get_connection()
 	set_row_factory(conn)
@@ -226,8 +90,6 @@ def update_task(user_id, task_id, title, done):
 	cur.execute("SELECT id, title, done, user_id FROM tasks WHERE id = :id", {"id": task_id})
 	task = cur.fetchone()
 	
-	#task = find_task(task_id)
-	
 	if task is None:
 		return NOT_FOUND
 	
@@ -256,8 +118,6 @@ def delete_task(user_id, task_id):
 	
 	cur.execute("SELECT id, title, done, user_id FROM tasks WHERE id = :id", {"id": task_id})
 	task = cur.fetchone()
-	
-#	task = find_task(task_id)
 	
 	if task is None:
 		return NOT_FOUND
