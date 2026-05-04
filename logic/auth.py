@@ -2,12 +2,39 @@ import bcrypt
 import random
 from db import get_connection, set_row_factory
 from errors import *
+from utility.helpers import parse_token
+from logic.users import find_user
 
 secret = ["Sauce123", "Nevermore", "LisaAnn"]
 
 def auth_row_dict(row):
 	return {"user_id": row["user_id"], "username": row["username"]}
 	
+
+def extract_user_id():
+	token = parse_token()
+		
+	parts = token.split(",")
+	
+	if len(parts) != 2:
+		return UNAUTHORIZED
+	
+	head = parts[0]
+	
+	if head not in secret:
+		return UNAUTHORIZED
+	
+	payload = parts[1]
+	
+	if not payload.isnumeric():
+		return UNAUTHORIZED
+	
+	if find_user(payload) is None:
+		return NOT_FOUND
+	
+	return int(payload)
+	
+
 
 def hash_password(password):
 	password = password.encode('utf-8')
@@ -59,7 +86,7 @@ def login_user(username, password):
 	conn = get_connection()
 	set_row_factory(conn)
 	cur = conn.cursor()
-	#return str(hash_password(password))
+
 	cur.execute("SELECT user_id, username, password FROM users WHERE username = :username", {"username": username})
 	
 	user = cur.fetchone()

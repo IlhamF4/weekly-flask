@@ -6,27 +6,27 @@ from logic.auth import register_user, login_user, hash_password, verify_password
 from logic.users import find_user
 from routes.users import validate_username
 
-def get_user_id():
-	if "X-User-Id" not in request.headers:
-		raise BadRequest("X-User-Id must exist in header")
-		
-	user_id = request.headers.get("X-User-Id")
-	
-	user_id = validate_user_id(user_id)
-	
-	return user_id
+#def get_user_id():
+#	if "X-User-Id" not in request.headers:
+#		raise BadRequest("X-User-Id must exist in header")
+#		
+#	user_id = request.headers.get("X-User-Id")
+#	
+#	user_id = validate_user_id(user_id)
+#	
+#	return user_id
 
 
-def validate_user_id(user_id):
-	if not check_positive_int(user_id):
-		raise BadRequest("input must be a positive integer")
-	
-	user_id = int(user_id)
-	
-	if find_user(user_id) == NOT_FOUND:
-		raise NotFound("user not found")
-	
-	return user_id
+#def validate_user_id(user_id):
+#	if not check_positive_int(user_id):
+#		raise BadRequest("input must be a positive integer")
+#	
+#	user_id = int(user_id)
+#	
+#	if find_user(user_id) == NOT_FOUND:
+#		raise NotFound("user not found")
+#	
+#	return user_id
 
 
 def validate_password(password):

@@ -1,6 +1,5 @@
 from flask import request
 from werkzeug.exceptions import BadRequest, Unauthorized
-from logic.auth import secret
 
 def parse_json():
 	if not request.is_json:
@@ -32,21 +31,10 @@ def parse_token():
 	
 	if token is None:
 		raise Unauthorized("token is required")
-		
-	if "," not in token:
-		raise BadRequest("token is malformed")
-		
-	parts = token.split(",")
 	
-	if len(parts) != 2:
-		raise BadRequest("token is malformed")
+	token = token.strip()
 	
-	head = parts[0]
+	if token == "":
+		raise Unauthorized("token cannot be empty")
 	
-	if head not in secret:
-		raise Unauthorized("token is invalid")
-	
-	body = parts[1]
-	
-	return int(body)
-	
+	return token
