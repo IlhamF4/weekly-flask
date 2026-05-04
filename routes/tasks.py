@@ -1,9 +1,10 @@
 from flask import request, jsonify
 from werkzeug.exceptions import BadRequest, NotFound, Forbidden
-from utility.helpers import parse_json, check_positive_int
+from utility.helpers import parse_json, check_positive_int, parse_token
 from errors import NOT_FOUND, FORBIDDEN
 from logic.tasks import add_task, get_tasks, update_task, delete_task
-from routes.auth import get_user_id
+from logic.users import find_user
+#from routes.auth import get_user_id
 
 def parse_bool(value):
 	if value is None:
@@ -84,17 +85,26 @@ def validate_done(value):
 	
 
 def validate_create_task(data):
+	user_id = parse_token()
+	
+	if find_user(user_id) is None:
+		raise NotFound("user does not exist")
+		
 	if "title" not in data:
 		raise BadRequest("title is required")
 		
 	title = validate_title(data["title"])
-	user_id = get_user_id()
+	#user_id = get_user_id()
 	
 	return {"user_id": user_id, "title": title}
 
 
 def validate_get_tasks():
-	user_id = get_user_id()
+	user_id = parse_token()
+	
+	if find_user(user_id) is NOT_FOUND:
+		raise NotFound("user does not exist")
+		
 	done = request.args.get("done")
 	page = request.args.get("page")
 	limit = request.args.get("limit")
@@ -117,12 +127,17 @@ def validate_get_tasks():
 
 
 def validate_update_task(data):
+	user_id = parse_token()
+	
+	if find_user(user_id) is None:
+		raise NotFound("user does not exist")
+		
 	if "title" not in data and "done" not in data:
 		raise BadRequest("title or done is required")
 	
 	title = None
 	done = None
-	user_id = get_user_id()
+	#user_id = get_user_id()
 	
 	if "title" in data:
 		title = validate_title(data["title"])
@@ -132,7 +147,10 @@ def validate_update_task(data):
 	return {"user_id": user_id, "title": title, "done": done}
 
 def validate_delete_task():
-	user_id = get_user_id()
+	user_id = parse_token()
+	
+	if find_user(user_id) is None:
+		raise NotFound("user does not exist")
 	
 	return {"user_id": user_id}
 	

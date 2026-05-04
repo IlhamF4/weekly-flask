@@ -1,14 +1,50 @@
+import bcrypt
+import random
 from db import get_connection, set_row_factory
+from errors import *
+
+secret = ["Sauce123", "Nevermore", "LisaAnn"]
 
 def auth_row_dict(row):
 	return {"user_id": row["user_id"], "username": row["username"]}
+	
+
+def hash_password(password):
+	password = password.encode('utf-8')
+	salt = bcrypt.gensalt()
+	
+	hashed_pw = bcrypt.hashpw(password, salt)
+	
+	return hashed_pw
+
+
+def verify_password(password, hashed_pw):
+	password = password.encode('utf-8')
+	
+	result = bcrypt.checkpw(password, hashed_pw)
+	
+	return result
+
+
+def gen_token(value):
+	head = random.choice(secret)
+	return f"{head},{value}"
 
 def register_user(username, password):
 	conn = get_connection()
 	set_row_factory(conn)
 	cur = conn.cursor()
 	
-	cur.execute("INSERT INTO users (username, password) VALUES (:username, :password)", {"username": username, "password": password})
+	cur.execute("SELECT username FROM users WHERE username = :username", {"username": username})
+	
+	user = cur.fetchone()
+	
+	if user is not None:
+		return CONFLICT
+	
+	hash_pw = hash_password(password)
+	
+	cur.execute("INSERT INTO users (username, password) VALUES (:username, :password)", {"username": username, "password": hash_pw})
 	conn.commit()
 	
 	cur.execute("SELECT user_id, username FROM users WHERE user_id = :user_id", {"user_id": cur.lastrowid})
@@ -19,20 +55,25 @@ def register_user(username, password):
 	return auth_row_dict(user)
 
 
-def hashed(password):
-	password = password.encode('utf-8')
-	salt = bcrypt.gensalt()
+def login_user(username, password):
+	conn = get_connection()
+	set_row_factory(conn)
+	cur = conn.cursor()
+	#return str(hash_password(password))
+	cur.execute("SELECT user_id, username, password FROM users WHERE username = :username", {"username": username})
 	
-	hashed_pw = bcrypt.hashpw(password, salt)
+	user = cur.fetchone()
 	
-	return hashed_pw
-
-
-#def check_pw(password, user_id):
-#	password = password.encode('utf-8')
-#	hashed_pw = get_password(user_id)
-#	
-#	if bcrypt.checkpw(password, hashed_pw):
-#		return True
-#	else:
-#		return False
+	if user is None:
+		return NOT_FOUND
+	
+	hashed_pw = user["password"]
+	
+	result = verify_password(password, hashed_pw)
+	
+	if not result:
+		return UNAUTHORIZED
+	
+	token = gen_token(user["user_id"])
+	
+	return {"user": auth_row_dict(user), "token": token}
