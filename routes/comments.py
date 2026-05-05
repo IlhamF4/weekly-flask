@@ -3,7 +3,7 @@ from werkzeug.exceptions import BadRequest, NotFound, Forbidden, Unauthorized
 from utility.helpers import parse_json, check_positive_int, parse_token
 from errors import *
 from logic.auth import extract_user_id
-from logic.comments import create_comment, get_comments
+from logic.comments import create_comment, get_comments, delete_comment
 
 def get_user_id():
 	user_id = extract_user_id()
@@ -12,6 +12,12 @@ def get_user_id():
 	
 	return user_id
 	
+	
+#def handle_errors(value):
+#	if value == NOT_FOUND:
+#		raise NotFound("task not found")
+#	if value == FORBIDDEN:
+#		raise Forbidden("forbidden to modify")
 
 def validate_content(value):
 	if not isinstance(value, str):
@@ -47,6 +53,8 @@ def register_comments_route(app):
 		#doing logic function post
 		result = create_comment(user_id, task_id, content)
 		
+		#handle_errors(result)
+		
 		if result == NOT_FOUND:
 			raise NotFound("task not found")
 		if result == FORBIDDEN:
@@ -61,9 +69,26 @@ def register_comments_route(app):
 		user_id = get_user_id()
 		
 		result = get_comments(user_id, task_id)
+		
+		#handle_errors(result)
 		if result == NOT_FOUND:
 			raise NotFound("task not found")
 		if result == FORBIDDEN:
-			raise Forbidden("forbidden to modify")
+			raise Forbidden("forbidden to access")
 			
 		return jsonify({"data": result, "message": "comments"}), 200
+		
+	
+	@app.route("/comments/<comment_id>", methods=["DELETE"])
+	def delete_comment_route(comment_id):
+		user_id = get_user_id()
+		
+		result = delete_comment(user_id, comment_id)
+		
+		#handle_errors(result)
+		if result == NOT_FOUND:
+			raise NotFound("comment not found")
+		if result == FORBIDDEN:
+			raise Forbidden("forbidden to modify")
+		
+		return jsonify({"data": result, "message": "comment deleted"})
