@@ -27,5 +27,15 @@ def init_db():
 		)
 	""")
 	
+	cur.execute("""
+		CREATE TABLE IF NOT EXISTS comments(
+			comment_id INTEGER PRIMARY KEY AUTOINCREMENT,
+			task_id INTEGER,
+			user_id INTEGER,
+			content TEXT,
+			created_at TEXT DEFAULT (datetime('now'))
+		)
+	""")
+	
 	conn.commit()
 	conn.close()
