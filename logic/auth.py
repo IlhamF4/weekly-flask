@@ -7,7 +7,7 @@ from logic.users import find_user
 
 secret = ["Sauce123", "Nevermore", "LisaAnn"]
 
-def auth_row_dict(row):
+def row_to_dict(row):
 	return {"user_id": row["user_id"], "username": row["username"]}
 	
 
@@ -79,7 +79,7 @@ def register_user(username, password):
 	
 	conn.close()
 	
-	return auth_row_dict(user)
+	return row_to_dict(user)
 
 
 def login_user(username, password):
@@ -103,4 +103,4 @@ def login_user(username, password):
 	
 	token = gen_token(user["user_id"])
 	
-	return {"user": auth_row_dict(user), "token": token}
+	return {"user": row_to_dict(user), "token": token}

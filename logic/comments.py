@@ -1,5 +1,6 @@
 from datetime import datetime
 from db import get_connection, set_row_factory
+from logic.tasks import validate_task_access
 from errors import *
 
 def row_to_dict(row):
@@ -8,18 +9,6 @@ def row_to_dict(row):
 
 def row_to_list(rows):
 	return [row_to_dict(row) for row in rows]
-	
-	
-def validate_task_access(cur, task_id, user_id):
-	cur.execute("SELECT id, user_id FROM tasks WHERE id = :id", {"id": task_id})
-	task = cur.fetchone()
-	
-	if task is None:
-		return NOT_FOUND
-	if user_id != task["user_id"]:
-		return FORBIDDEN
-	
-	return task
 		
 
 def create_comment(user_id, task_id, content):

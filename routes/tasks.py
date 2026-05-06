@@ -3,10 +3,7 @@ from werkzeug.exceptions import BadRequest, NotFound, Forbidden, Unauthorized
 from utility.helpers import parse_json, check_positive_int, parse_token
 from errors import *
 from logic.tasks import add_task, get_tasks, update_task, delete_task
-#from logic.users import find_user
 from logic.auth import extract_user_id
-#from routes.auth import get_user_id
-
 
 def get_user_id():
 	user_id = extract_user_id()
@@ -95,19 +92,15 @@ def validate_done(value):
 	
 
 def validate_create_task(data):
-	user_id = get_user_id()
-		
 	if "title" not in data:
 		raise BadRequest("title is required")
 		
 	title = validate_title(data["title"])
 	
-	return {"user_id": user_id, "title": title}
+	return {"title": title}
 
 
 def validate_get_tasks():
-	user_id = get_user_id()
-		
 	done = request.args.get("done")
 	page = request.args.get("page")
 	limit = request.args.get("limit")
@@ -126,12 +119,10 @@ def validate_get_tasks():
 	page = parse_page(page)
 	limit = parse_limit(limit)
 	
-	return {"user_id": user_id, "done": done, "search": search, "sort": sort, "page": page, "limit": limit}
+	return {"done": done, "search": search, "sort": sort, "page": page, "limit": limit}
 
 
 def validate_update_task(data):
-	user_id = get_user_id()
-		
 	if "title" not in data and "done" not in data:
 		raise BadRequest("title or done is required")
 	
@@ -143,23 +134,19 @@ def validate_update_task(data):
 	if "done" in data:
 		done = validate_done(data["done"])
 		
-	return {"user_id": user_id, "title": title, "done": done}
-
-def validate_delete_task():
-	user_id = get_user_id()
-	
-	return {"user_id": user_id}
+	return {"title": title, "done": done}
 	
 
 def register_tasks_route(app):
 	@app.route("/tasks", methods=["POST"])
 	def create_task_route():
+		user_id = get_user_id()
+		
 		data = parse_json()
 		
 		validated = validate_create_task(data)
 		
 		title = validated["title"]
-		user_id = validated["user_id"]
 		
 		result = add_task(user_id, title)
 		
@@ -171,9 +158,10 @@ def register_tasks_route(app):
 	
 	@app.route("/tasks", methods=["GET"])
 	def get_tasks_route():
+		user_id = get_user_id()
+		
 		validated = validate_get_tasks()
 		
-		user_id = validated["user_id"]
 		done = validated["done"]
 		search = validated["search"]
 		sort = validated["sort"]
@@ -194,11 +182,12 @@ def register_tasks_route(app):
 	
 	@app.route("/tasks/<int:task_id>",methods=["PUT"])
 	def update_task_route(task_id):
+		user_id = get_user_id()
+		
 		data = parse_json()
 		
 		validated = validate_update_task(data)
 		
-		user_id = validated["user_id"]
 		title = validated["title"]
 		done = validated["done"]
 		
@@ -206,7 +195,6 @@ def register_tasks_route(app):
 		
 		if result == FORBIDDEN:
 			raise Forbidden("forbidden to modify task")
-		
 		if result == NOT_FOUND:
 			raise NotFound("task not found")
 		
@@ -218,14 +206,12 @@ def register_tasks_route(app):
 	
 	@app.route("/tasks/<int:task_id>", methods=["DELETE"])
 	def delete_task_route(task_id):
-		validated = validate_delete_task()
+		user_id = get_user_id()
 		
-		user_id = validated["user_id"]
 		result = delete_task(user_id, task_id)
 		
 		if result == FORBIDDEN:
 			raise Forbidden("forbidden to modify task")
-		
 		if result == NOT_FOUND:
 			raise NotFound("task not found")
 		

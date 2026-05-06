@@ -1,12 +1,24 @@
 from db import get_connection, set_row_factory
 from errors import FORBIDDEN, NOT_FOUND
 
-def tasks_row_list(rows):
-	return [tasks_row_dict(row) for row in rows]
+def row_to_list(rows):
+	return [row_to_dict(row) for row in rows]
 
 
-def tasks_row_dict(row):
+def row_to_dict(row):
 	return {"id": row["id"], "title": row["title"], "done": bool(row["done"]), "user_id": row["user_id"]}
+	
+
+def validate_task_access(cur, task_id, user_id):
+	cur.execute("SELECT id, user_id FROM tasks WHERE id = :id", {"id": task_id})
+	task = cur.fetchone()
+	
+	if task is None:
+		return NOT_FOUND
+	if user_id != task["user_id"]:
+		return FORBIDDEN
+	
+	return task
 	
 
 def add_task(user_id, title):
@@ -21,7 +33,7 @@ def add_task(user_id, title):
 	task = cur.fetchone()
 	conn.close()
 	
-	return tasks_row_dict(task)
+	return row_to_dict(task)
 
 
 def get_tasks(user_id, done=None, search=None, sort=None, page=1, limit=10):
@@ -59,7 +71,7 @@ def get_tasks(user_id, done=None, search=None, sort=None, page=1, limit=10):
 	params["offset"] = offset
 
 	cur.execute(query, params)
-	tasks = tasks_row_list(cur.fetchall())
+	tasks = row_to_list(cur.fetchall())
 	
 	conn.close()
 	
@@ -71,14 +83,9 @@ def update_task(user_id, task_id, title, done):
 	set_row_factory(conn)
 	cur = conn.cursor()
 	
-	cur.execute("SELECT id, title, done, user_id FROM tasks WHERE id = :id", {"id": task_id})
-	task = cur.fetchone()
-	
-	if task is None:
-		return NOT_FOUND
-	
-	if user_id != task["user_id"]:
-		return FORBIDDEN
+	task = validate_task_access(cur, task_id, user_id)
+	if task in (NOT_FOUND, FORBIDDEN):
+		return task
 		
 	if title is not None:
 		cur.execute("UPDATE tasks SET title = :title WHERE id = :id", {"title": title, "id": task_id})
@@ -92,7 +99,7 @@ def update_task(user_id, task_id, title, done):
 	
 	conn.close()
 	
-	return tasks_row_dict(task)
+	return row_to_dict(task)
 
 	
 def delete_task(user_id, task_id):
@@ -100,18 +107,16 @@ def delete_task(user_id, task_id):
 	set_row_factory(conn)
 	cur = conn.cursor()
 	
+	task = validate_task_access(cur, task_id, user_id)
+	if task in (NOT_FOUND, FORBIDDEN):
+		return task
+	
 	cur.execute("SELECT id, title, done, user_id FROM tasks WHERE id = :id", {"id": task_id})
 	task = cur.fetchone()
-	
-	if task is None:
-		return NOT_FOUND
-		
-	if user_id != task["user_id"]:
-		return FORBIDDEN
 		
 	cur.execute("DELETE FROM tasks WHERE id = :id", {"id": task_id})
 	
 	conn.commit()
 	conn.close()
 	
-	return tasks_row_dict(task)
+	return row_to_dict(task)
