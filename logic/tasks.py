@@ -1,7 +1,6 @@
 from db import get_connection, set_row_factory
 from errors import FORBIDDEN, NOT_FOUND
 
-
 def tasks_row_list(rows):
 	return [tasks_row_dict(row) for row in rows]
 
@@ -9,21 +8,6 @@ def tasks_row_list(rows):
 def tasks_row_dict(row):
 	return {"id": row["id"], "title": row["title"], "done": bool(row["done"]), "user_id": row["user_id"]}
 	
-def find_task(task_id):
-	conn = get_connection()
-	set_row_factory(conn)
-	cur = conn.cursor()
-
-	cur.execute("SELECT id, title, done, user_id FROM tasks WHERE id = :id", {"id": task_id})
-	
-	task =  cur.fetchone()
-	
-	conn.close()
-	
-	if task is None:
-		return NOT_FOUND
-		
-	return tasks_row_dict(task)
 
 def add_task(user_id, title):
 	conn = get_connection()

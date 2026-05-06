@@ -1,33 +1,10 @@
 from flask import jsonify, request
 from werkzeug.exceptions import BadRequest, NotFound, Forbidden, Conflict, Unauthorized
-from utility.helpers import parse_json, check_positive_int
+from utility.helpers import parse_json
 from errors import *
 from logic.auth import register_user, login_user, hash_password, verify_password
 from logic.users import find_user
 from routes.users import validate_username
-
-#def get_user_id():
-#	if "X-User-Id" not in request.headers:
-#		raise BadRequest("X-User-Id must exist in header")
-#		
-#	user_id = request.headers.get("X-User-Id")
-#	
-#	user_id = validate_user_id(user_id)
-#	
-#	return user_id
-
-
-#def validate_user_id(user_id):
-#	if not check_positive_int(user_id):
-#		raise BadRequest("input must be a positive integer")
-#	
-#	user_id = int(user_id)
-#	
-#	if find_user(user_id) == NOT_FOUND:
-#		raise NotFound("user not found")
-#	
-#	return user_id
-
 
 def validate_password(password):
 	if not isinstance(password, str):
@@ -67,11 +44,6 @@ def register_auth_route(app):
 			raise Conflict("username already exist")
 		
 		return jsonify({"data": result, "message": "user registered"})
-		
-	@app.route("/auth", methods=["GET"])
-	def examp():
-		result = register_user("wong", "1234")
-		return jsonify(result)
 	
 	
 	@app.route("/auth/login", methods=["POST"])
@@ -86,7 +58,6 @@ def register_auth_route(app):
 		
 		if result == NOT_FOUND:
 			raise NotFound("username not found")
-		
 		if result == UNAUTHORIZED:
 			raise Unauthorized("password is incorrect")
 		
