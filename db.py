@@ -14,7 +14,7 @@ def init_db():
 	CREATE TABLE IF NOT EXISTS tasks(
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		title TEXT,
-		done BOOLEAN,
+		done BOOLEAN DEFAULT FALSE,
 		user_id INTEGER,
 		archived BOOLEAN DEFAULT FALSE
 	)
@@ -40,12 +40,3 @@ def init_db():
 	
 	conn.commit()
 	conn.close()
-	
-conn = get_connection()
-cur = conn.cursor()
-
-#cur.execute("ALTER TABLE tasks RENAME COLUMN archieved TO archived")
-#conn.commit()
-
-#cur.execute("SELECT archived FROM tasks")
-#print(cur.fetchall())

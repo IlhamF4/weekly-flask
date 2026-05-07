@@ -13,6 +13,13 @@ def get_user_id():
 	return user_id
 	
 	
+def handle_task_errors(value):
+	if result == NOT_FOUND:
+		raise NotFound("task not found")
+	if result == FORBIDDEN:
+		raise Forbidden("forbidden to modify task")
+	
+	
 def parse_bool(value):
 	if value is None:
 		return None
@@ -193,10 +200,7 @@ def register_tasks_route(app):
 		
 		result = update_task(user_id, task_id, title,done)
 		
-		if result == FORBIDDEN:
-			raise Forbidden("forbidden to modify task")
-		if result == NOT_FOUND:
-			raise NotFound("task not found")
+		handle_task_errors(result)
 		
 		return jsonify({
 			"data": result,
@@ -210,10 +214,7 @@ def register_tasks_route(app):
 		
 		result = delete_task(user_id, task_id)
 		
-		if result == FORBIDDEN:
-			raise Forbidden("forbidden to modify task")
-		if result == NOT_FOUND:
-			raise NotFound("task not found")
+		handle_task_errors(result)
 		
 		return jsonify({
 			"data": result,
@@ -227,11 +228,7 @@ def register_tasks_route(app):
 		
 		result = set_archive_task(user_id, task_id, True)
 		
-		#use a helper function to handle errors
-		if result == NOT_FOUND:
-			raise NotFound("task not found")
-		if result == FORBIDDEN:
-			raise Forbidden("forbidden to modify task")
+		handle_task_errors(result)
 			
 		return jsonify({"data": result, "message": "task archieved"})
 	
@@ -242,9 +239,6 @@ def register_tasks_route(app):
 		
 		result = set_archive_task(user_id, task_id, False)
 		
-		if result == NOT_FOUND:
-			raise NotFound("task not found")
-		if result == FORBIDDEN:
-			raise Forbidden("forbidden to modify task")
+		handle_task_errors(result)
 			
 		return jsonify({"data": result, "message": "task unarchieved"})

@@ -6,7 +6,7 @@ def row_to_list(rows):
 
 
 def row_to_dict(row):
-	return {"id": row["id"], "title": row["title"], "done": bool(row["done"]), "user_id": row["user_id"], "archived": bool(row["archived"])}
+	return {"id": row["id"], "title": row["title"], "done": bool(row["done"]), "user_id": row["user_id"], "archieved": bool(row["archieved"])}
 	
 
 def validate_task_access(cur, task_id, user_id):
@@ -23,10 +23,16 @@ def validate_task_access(cur, task_id, user_id):
 
 
 def is_task_archived(cur, task_id):
-	cur.execute("SELECT id, archived FROM tasks WHERE id = :id", {"id": task_id})
+	cur.execute("SELECT id, archieved FROM tasks WHERE id = :id", {"id": task_id})
 	task = cur.fetchone()
 	
-	return bool(task["archived"])
+	return bool(task["archieved"])
+
+
+def get_task(cur, task_id):
+	cur.execute("SELECT id, title, done, user_id, archieved FROM tasks WHERE id = :id", {"id": task_id})
+	
+	return cur.fetchone()
 	
 
 def add_task(user_id, title):
@@ -34,11 +40,11 @@ def add_task(user_id, title):
 	set_row_factory(conn)
 	cur = conn.cursor()
 	
-	cur.execute("INSERT INTO tasks (title, done, user_id) VALUES (:title, :done, :user_id)", {"title": title, "done": False, "user_id": user_id})
+	cur.execute("INSERT INTO tasks (title, user_id) VALUES (:title, :user_id)", {"title": title, "user_id": user_id})
 	conn.commit()
 	
-	cur.execute("SELECT id, title, done, user_id, archived FROM tasks WHERE id = :id", {"id": cur.lastrowid})
-	task = cur.fetchone()
+	task = get_task(cur, cur.lastrowid)
+	
 	conn.close()
 	
 	return row_to_dict(task)
@@ -53,7 +59,7 @@ def get_tasks(user_id, done=None, search=None, sort=None, page=1, limit=10):
 	page = max(1, page)
 	offset = (page - 1) * limit
 	
-	query = "SELECT id, title, done, user_id, archived FROM tasks "
+	query = "SELECT id, title, done, user_id, archieved FROM tasks "
 	params = {}
 	conditions = []
 	
@@ -102,8 +108,7 @@ def update_task(user_id, task_id, title, done):
 		cur.execute("UPDATE tasks SET done = :done WHERE id = :id", {"done": done, "id": task_id})
 	conn.commit()
 	
-	cur.execute("SELECT id, title, done, user_id, archived FROM tasks WHERE id = :id", {"id": task_id})
-	task = cur.fetchone()
+	task = get_task(cur, task_id)
 	
 	conn.close()
 	
@@ -119,9 +124,7 @@ def delete_task(user_id, task_id):
 	if task in (NOT_FOUND, FORBIDDEN):
 		return task
 	
-	#can I change this to function with parameter cur and task_id? so I dont need to build a new connection
-	cur.execute("SELECT id, title, done, user_id, archived FROM tasks WHERE id = :id", {"id": task_id})
-	task = cur.fetchone()
+	task = get_task(cur, task_id)
 		
 	cur.execute("DELETE FROM tasks WHERE id = :id", {"id": task_id})
 	conn.commit()
@@ -140,31 +143,11 @@ def set_archive_task(user_id, task_id, archived):
 	if task in (NOT_FOUND, FORBIDDEN):
 		return task
 		
-	cur.execute("UPDATE tasks SET archived = :archived WHERE id = :id", {"archived": archived, "id": task_id})
+	cur.execute("UPDATE tasks SET archieved = :archived WHERE id = :id", {"archived": archived, "id": task_id})
 	conn.commit()
 	
-	cur.execute("SELECT id, title, done, user_id, archived FROM tasks WHERE id = :id", {"id": task_id})
-	task = cur.fetchone()
+	task = get_task(cur, task_id)
+	
 	conn.close()
 	
 	return row_to_dict(task)
-	
-
-#can we join this function to archieve task? using true or false parameter
-#def unarchive_task(user_id, task_id):
-#	conn = get_connection()
-#	set_row_factory(conn)
-#	cur = conn.cursor()
-#	
-#	task = validate_task_access(cur, task_id, user_id)
-#	if task in (NOT_FOUND, FORBIDDEN):
-#		return task
-#		
-#	cur.execute("UPDATE tasks SET archived = FALSE WHERE id = :id", {"id": task_id})
-#	conn.commit()
-#	
-#	cur.execute("SELECT id, title, done, user_id, archived FROM tasks WHERE id = :id", {"id": task_id})
-#	task = cur.fetchone()
-#	conn.close()
-#	
-#	return row_to_dict(task)
