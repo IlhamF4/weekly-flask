@@ -2,7 +2,7 @@ from flask import request, jsonify
 from werkzeug.exceptions import BadRequest, NotFound, Forbidden, Unauthorized
 from utility.helpers import parse_json, check_positive_int, parse_token
 from errors import *
-from logic.tasks import add_task, get_tasks, update_task, delete_task
+from logic.tasks import add_task, get_tasks, update_task, delete_task, set_archive_task
 from logic.auth import extract_user_id
 
 def get_user_id():
@@ -219,3 +219,32 @@ def register_tasks_route(app):
 			"data": result,
 			"message": "Task deleted"
 		}), 200
+		
+		
+	@app.route("/tasks/<int:task_id>/archieve", methods=["PATCH"])
+	def archieve_route(task_id):
+		user_id = get_user_id()
+		
+		result = set_archive_task(user_id, task_id, True)
+		
+		#use a helper function to handle errors
+		if result == NOT_FOUND:
+			raise NotFound("task not found")
+		if result == FORBIDDEN:
+			raise Forbidden("forbidden to modify task")
+			
+		return jsonify({"data": result, "message": "task archieved"})
+	
+	
+	@app.route("/tasks/<int:task_id>/unarchieve", methods=["PATCH"])
+	def unarchieve_route(task_id):
+		user_id = get_user_id()
+		
+		result = set_archive_task(user_id, task_id, False)
+		
+		if result == NOT_FOUND:
+			raise NotFound("task not found")
+		if result == FORBIDDEN:
+			raise Forbidden("forbidden to modify task")
+			
+		return jsonify({"data": result, "message": "task unarchieved"})

@@ -1,6 +1,6 @@
 from datetime import datetime
 from db import get_connection, set_row_factory
-from logic.tasks import validate_task_access
+from logic.tasks import validate_task_access, is_task_archived
 from errors import *
 
 def row_to_dict(row):
@@ -20,6 +20,12 @@ def create_comment(user_id, task_id, content):
 	if task in (NOT_FOUND, FORBIDDEN):
 		return task
 	
+	#in convention do we need to add (?) if function produce boolean value
+	#i am uncertain which error to return here
+	if is_task_archived(cur, task_id):
+		return FORBIDDEN
+	
+	#do we need this? because in table we set default to datetime now
 	created_at = str(datetime.now())
 	
 	cur.execute("INSERT INTO comments (task_id, user_id, content, created_at) VALUES (:task_id, :user_id, :content, :created_at)", {"task_id": task_id, "user_id": user_id, "content": content, "created_at": created_at})
