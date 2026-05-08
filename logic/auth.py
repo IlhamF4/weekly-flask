@@ -1,5 +1,6 @@
 import bcrypt
 import random
+import config
 from db import get_connection, set_row_factory
 from errors import *
 from utility.helpers import parse_token
@@ -38,6 +39,7 @@ def extract_user_id():
 
 def hash_password(password):
 	password = password.encode('utf-8')
+	
 	salt = bcrypt.gensalt()
 	
 	hashed_pw = bcrypt.hashpw(password, salt)
@@ -55,10 +57,13 @@ def verify_password(password, hashed_pw):
 
 def gen_token(value):
 	head = random.choice(secret)
+	
 	return f"{head},{value}"
 
+
+#conflict with users file
 def register_user(username, password):
-	conn = get_connection()
+	conn = get_connection(config.DB_NAME)
 	set_row_factory(conn)
 	cur = conn.cursor()
 	
@@ -83,7 +88,7 @@ def register_user(username, password):
 
 
 def login_user(username, password):
-	conn = get_connection()
+	conn = get_connection(config.DB_NAME)
 	set_row_factory(conn)
 	cur = conn.cursor()
 

@@ -5,6 +5,7 @@ from routes.auth import register_auth_route
 from routes.tasks import register_tasks_route
 from routes.comments import register_comments_route
 from db import init_db
+import config
 
 app = Flask(__name__)
 
@@ -20,5 +21,5 @@ def handle_http_exception(e):
 			}), e.code
 
 if __name__ == "__main__":
-	init_db()
+	init_db(config.DB_NAME)
 	app.run(debug=True)

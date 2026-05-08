@@ -3,7 +3,7 @@ from werkzeug.exceptions import BadRequest, NotFound, Forbidden, Unauthorized
 from utility.helpers import parse_json, check_positive_int, parse_token
 from errors import *
 from logic.auth import extract_user_id
-from logic.comments import create_comment, get_comments, delete_comment
+from logic.comments import add_comment, get_comments, delete_comment
 
 def get_user_id():
 	user_id = extract_user_id()
@@ -44,7 +44,7 @@ def register_comments_route(app):
 		validated = validate_create_comment(data)
 		content = validated["content"]
 		
-		result = create_comment(user_id, task_id, content)
+		result = add_comment(user_id, task_id, content)
 		
 		if result == NOT_FOUND:
 			raise NotFound("task not found")

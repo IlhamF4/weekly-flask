@@ -1,3 +1,4 @@
+import config
 from db import get_connection, set_row_factory
 from errors import FORBIDDEN, NOT_FOUND
 
@@ -9,7 +10,7 @@ def row_to_dict(row):
 	return {"user_id": row["user_id"], "username": row["username"]}
 
 def find_user(user_id):
-	conn = get_connection()
+	conn = get_connection(config.DB_NAME)
 	set_row_factory(conn)
 	cur = conn.cursor()
 	
@@ -26,7 +27,7 @@ def find_user(user_id):
 
 
 def add_user(username):
-	conn = get_connection()
+	conn = get_connection(config.DB_NAME)
 	set_row_factory(conn)
 	cur = conn.cursor()
 	
@@ -42,7 +43,7 @@ def add_user(username):
 
 
 def get_users():
-	conn = get_connection()
+	conn = get_connection(config.DB_NAME)
 	set_row_factory(conn)
 	cur = conn.cursor()
 	
@@ -55,7 +56,7 @@ def get_users():
 
 
 def update_user(user_id, username):
-	conn = get_connection()
+	conn = get_connection(config.DB_NAME)
 	set_row_factory(conn)
 	cur = conn.cursor()
 	
@@ -78,7 +79,7 @@ def update_user(user_id, username):
 	return row_to_dict(user)
 
 def delete_user(user_id):
-	conn = get_connection()
+	conn = get_connection(config.DB_NAME)
 	set_row_factory(conn)
 	cur = conn.cursor()
 	

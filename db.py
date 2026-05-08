@@ -1,13 +1,14 @@
 import sqlite3
+import config
 
-def get_connection():
-	return sqlite3.connect("task.db")
+def get_connection(db_name):
+	return sqlite3.connect(db_name)
 
 def set_row_factory(conn):
 	conn.row_factory = sqlite3.Row
 
-def init_db():
-	conn = get_connection()
+def init_db(db_name):
+	conn = get_connection(db_name)
 	cur = conn.cursor()
 	
 	cur.execute("""

@@ -14,9 +14,9 @@ def get_user_id():
 	
 	
 def handle_task_errors(value):
-	if result == NOT_FOUND:
+	if value == NOT_FOUND:
 		raise NotFound("task not found")
-	if result == FORBIDDEN:
+	if value == FORBIDDEN:
 		raise Forbidden("forbidden to modify task")
 	
 	
