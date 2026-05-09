@@ -43,7 +43,7 @@ def get_comments(user_id, task_id):
 	if task in (NOT_FOUND, FORBIDDEN):
 		return task
 		
-	cur.execute("SELECT comment_id, task_id, user_id, content, created_at FROM comments WHERE task_id = :task_id", {"task_id": task_id})
+	cur.execute("SELECT comment_id, task_id, user_id, content, created_at FROM comments WHERE task_id = :task_id AND deleted = :deleted", {"task_id": task_id, "deleted": False})
 	comments = cur.fetchall()
 	
 	conn.close()
@@ -57,17 +57,26 @@ def delete_comment(user_id, comment_id):
 	cur = conn.cursor()
 	
 	#we can merge into 1 helper function
-	cur.execute("SELECT comment_id, task_id, user_id, content, created_at FROM comments WHERE comment_id = :comment_id", {"comment_id": comment_id})
+	cur.execute("SELECT user_id, deleted FROM comments WHERE comment_id = :comment_id", {"comment_id": comment_id})
 	comment = cur.fetchone()
 	
-	if comment is None:
+	#if comment is None:
+#		return NOT_FOUND
+	if comment is None: 
 		return NOT_FOUND
-	if user_id != comment["user_id"]:
+	if user_id != int(comment["user_id"]):
 		return FORBIDDEN
 	
-	cur.execute("DELETE FROM comments WHERE comment_id = :comment_id", {"comment_id": comment_id})
+	if bool(comment["deleted"]) is True:
+		return NOT_FOUND
 	
+	#cur.execute("DELETE FROM comments WHERE comment_id = :comment_id", {"comment_id": comment_id})
+	cur.execute("UPDATE comments SET deleted = True WHERE comment_id = :comment_id", {"comment_id": comment_id})
 	conn.commit()
+	
+	cur.execute("SELECT comment_id, task_id, user_id, content, created_at, deleted FROM comments WHERE comment_id = :comment_id", {"comment_id": comment_id})
+	comment = cur.fetchone()
+	
 	conn.close()
 	
-	return row_to_dict(comment)
+	return row_to_dict(comment) | {"deleted": bool(comment["deleted"])}

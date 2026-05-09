@@ -35,7 +35,8 @@ def init_db(db_name):
 			task_id INTEGER,
 			user_id INTEGER,
 			content TEXT,
-			created_at TEXT DEFAULT (datetime('now'))
+			created_at TEXT DEFAULT (datetime('now')),
+			deleted BOOLEAN DEFAULT FALSE
 		)
 	""")
 	
