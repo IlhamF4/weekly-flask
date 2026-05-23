@@ -1,6 +1,6 @@
 from flask import request, jsonify
 from werkzeug.exceptions import BadRequest, NotFound, Forbidden, Unauthorized
-from utility.helpers import parse_json, check_positive_int, parse_token
+from utility.helpers import *
 from errors import *
 from logic.auth import extract_user_id
 from logic.comments import add_comment, get_comments, delete_comment
@@ -24,6 +24,13 @@ def validate_content(value):
 		raise BadRequest("content cannot be empty")
 		
 	return value
+	
+	
+def validate_include_deleted(value):
+	if value is None:
+		return False
+	
+	return parse_bool(value)
 
 
 def validate_create_comment(data):
@@ -33,6 +40,20 @@ def validate_create_comment(data):
 	content = validate_content(data["content"])
 	
 	return {"content": content}
+
+
+def validate_get_comments():
+	include_deleted = request.args.get("deleted")
+	page = request.args.get("page")
+	limit = request.args.get("limit")
+	
+	if include_deleted is not None:
+		include_deleted = validate_include_deleted(include_deleted)
+	
+	page = parse_page(page)
+	limit = parse_limit(lomit)
+	
+	return {"deleted": include_deleted, "page": page, "limit": limit}
 
 
 def register_comments_route(app):
@@ -58,7 +79,13 @@ def register_comments_route(app):
 	def get_comments_route(task_id):
 		user_id = get_user_id()
 		
-		result = get_comments(user_id, task_id)
+		validated = validate_get_comments()
+		
+		include_deleted = validated["deleted"]
+		page = validated["page"]
+		limit = validated["limit"]
+		
+		result = get_comments(user_id, task_id, include_deleted, page, limit)
 
 		if result == NOT_FOUND:
 			raise NotFound("task not found")

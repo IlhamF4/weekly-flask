@@ -1,6 +1,6 @@
 from flask import request, jsonify
 from werkzeug.exceptions import BadRequest, NotFound, Forbidden, Unauthorized
-from utility.helpers import parse_json, check_positive_int, parse_token
+from utility.helpers import *
 from errors import *
 from logic.tasks import add_task, get_tasks, update_task, delete_task, set_archive_task
 from logic.auth import extract_user_id
@@ -18,66 +18,6 @@ def handle_task_errors(value):
 		raise NotFound("task not found")
 	if value == FORBIDDEN:
 		raise Forbidden("forbidden to modify task")
-	
-	
-def parse_bool(value):
-	if value is None:
-		return None
-		
-	value = value.lower()
-	
-	if value == "true":
-		return True
-	elif value == "false":
-		return False
-	else:
-		raise BadRequest("Input must be either true or false")
-		
-		
-def parse_page(value):
-	if value is None:
-		return 1
-	
-	if not check_positive_int(value):
-		raise BadRequest("input must be a positive integer")
-	
-	return int(value)
-	
-
-def parse_limit(value):
-	if value is None:
-		return 10
-	
-	if not check_positive_int(value):
-		raise BadRequest("input must be a positive integer")
-	
-	return int(value)
-
-
-def parse_sort(value):
-	if value is None:
-		return None
-	
-	value = value.lower()
-	
-	if value == "asc":
-		return "ASC"
-	elif value == "desc":
-		return "DESC"
-	else:
-		raise BadRequest("input must be either asc or desc")
-		
-
-def parse_search(value):
-	if value is None:
-		return None
-	
-	value = value.strip()
-	
-	if value == "":
-		raise BadRequest("search cannot be empty")
-	
-	return value
 
 
 def validate_title(value):
