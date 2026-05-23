@@ -47,11 +47,10 @@ def validate_get_comments():
 	page = request.args.get("page")
 	limit = request.args.get("limit")
 	
-	if include_deleted is not None:
-		include_deleted = validate_include_deleted(include_deleted)
+	include_deleted = validate_include_deleted(include_deleted)
 	
 	page = parse_page(page)
-	limit = parse_limit(lomit)
+	limit = parse_limit(limit)
 	
 	return {"deleted": include_deleted, "page": page, "limit": limit}
 
