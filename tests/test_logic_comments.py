@@ -22,7 +22,7 @@ def test_get_comments_return_success():
 	
 	result = get_comments(user["user_id"], task["id"])
 	
-	assert type(result) is list
+	assert result[0]["content"] == "test"
 	
 
 def test_deleted_comments_hidden_from_get_comments():
@@ -37,6 +37,22 @@ def test_deleted_comments_hidden_from_get_comments():
 	result = get_comments(user["user_id"], task["id"])
 	
 	assert result == []
+
+
+def test_deleted_comment_show_on_get_comments():
+	clear_tables()
+	
+	user, task = prepare_data()
+	
+	conn, cur = db_connection()
+	
+	comment = add_comment(user["user_id"], task["id"], "test")
+	
+	delete_comment(user["user_id"], comment["comment_id"])
+	
+	result = get_comments(user["user_id"], task["id"], True)
+	
+	assert result[0]["content"] == "test"
 	
 
 def test_delete_comment_return_success():

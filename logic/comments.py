@@ -20,7 +20,6 @@ def add_comment(user_id, task_id, content):
 	if task in (NOT_FOUND, FORBIDDEN):
 		return task
 	
-	#in convention do we need to add (?) if function produce boolean value
 	if is_task_archived(cur, task_id):
 		return FORBIDDEN
 	
@@ -34,7 +33,7 @@ def add_comment(user_id, task_id, content):
 	return row_to_dict(comment)
 
 
-def get_comments(user_id, task_id):
+def get_comments(user_id, task_id, include_deleted=False):
 	conn = get_connection(config.DB_NAME)
 	set_row_factory(conn)
 	cur = conn.cursor()
@@ -42,8 +41,15 @@ def get_comments(user_id, task_id):
 	task = validate_task_access(cur, user_id, task_id)
 	if task in (NOT_FOUND, FORBIDDEN):
 		return task
+	
+	query = "SELECT comment_id, task_id, user_id, content, created_at FROM comments WHERE task_id = :task_id"
+	params = {"task_id": task_id}
+	
+	if not include_deleted:
+		query += " AND deleted = :deleted"
+		params["deleted"] = False
 		
-	cur.execute("SELECT comment_id, task_id, user_id, content, created_at FROM comments WHERE task_id = :task_id AND deleted = :deleted", {"task_id": task_id, "deleted": False})
+	cur.execute(query, params )
 	comments = cur.fetchall()
 	
 	conn.close()
@@ -60,8 +66,6 @@ def delete_comment(user_id, comment_id):
 	cur.execute("SELECT user_id, deleted FROM comments WHERE comment_id = :comment_id", {"comment_id": comment_id})
 	comment = cur.fetchone()
 	
-	#if comment is None:
-#		return NOT_FOUND
 	if comment is None: 
 		return NOT_FOUND
 	if user_id != int(comment["user_id"]):
