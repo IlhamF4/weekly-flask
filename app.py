@@ -24,4 +24,4 @@ def handle_http_exception(e):
 if __name__ == "__main__":
 	init_db(config.DB_NAME)
 	port = int(os.getenv("PORT", 5000))
-	app.run(host=0.0.0.0, port=port)
+	app.run(host="0.0.0.0", port=port)
