@@ -116,7 +116,7 @@ def register_comments_route(app):
 				"page": page, 
 				"limit": limit, 
 				"count": len(result)
-			} #is this total count or page count?
+			} #is this total count or page count?#
 		}), 200
 		
 	
