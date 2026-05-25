@@ -9,6 +9,22 @@ def row_to_dict(row):
 
 def row_to_list(rows):
 	return [row_to_dict(row) for row in rows]
+	
+
+def validate_comment_access(cur, user_id, comment_id):
+	cur.execute("SELECT user_id, deleted FROM comments WHERE comment_id = :comment_id", {"comment_id": comment_id})
+	comment = cur.fetchone()
+	
+	if comment is None: 
+		return NOT_FOUND
+	if user_id != int(comment["user_id"]):
+		return FORBIDDEN
+	
+	return comment
+
+def get_comment(cur, comment_id):
+	cur.execute("SELECT comment_id, task_id, user_id, content, created_at, deleted FROM comments WHERE comment_id = :comment_id", {"comment_id": comment_id})
+	return cur.fetchone()
 		
 
 def add_comment(user_id, task_id, content):
@@ -71,13 +87,18 @@ def delete_comment(user_id, comment_id):
 	cur = conn.cursor()
 	
 	#we can merge into 1 helper function
-	cur.execute("SELECT user_id, deleted FROM comments WHERE comment_id = :comment_id", {"comment_id": comment_id})
-	comment = cur.fetchone()
+	#cur.execute("SELECT user_id, deleted FROM comments WHERE comment_id = :comment_id", {"comment_id": comment_id})
+#	comment = cur.fetchone()
+#	
+#	if comment is None: 
+#		return NOT_FOUND
+#	if user_id != int(comment["user_id"]):
+#		return FORBIDDEN
 	
-	if comment is None: 
-		return NOT_FOUND
-	if user_id != int(comment["user_id"]):
-		return FORBIDDEN
+	comment = validate_comment_access(cur, user_id, comment_id)
+	
+	if comment in (NOT_FOUND, FORBIDDEN):
+		return comment
 	
 	if bool(comment["deleted"]) is True:
 		return NOT_FOUND
@@ -86,8 +107,9 @@ def delete_comment(user_id, comment_id):
 	cur.execute("UPDATE comments SET deleted = True WHERE comment_id = :comment_id", {"comment_id": comment_id})
 	conn.commit()
 	
-	cur.execute("SELECT comment_id, task_id, user_id, content, created_at, deleted FROM comments WHERE comment_id = :comment_id", {"comment_id": comment_id})
-	comment = cur.fetchone()
+	#cur.execute("SELECT comment_id, task_id, user_id, content, created_at, deleted FROM comments WHERE comment_id = :comment_id", {"comment_id": comment_id})
+#	comment = cur.fetchone()
+	comment = get_comment(cur, comment_id)
 	
 	conn.close()
 	
@@ -100,19 +122,15 @@ def restore_comment(user_id, comment_id):
 	cur = conn.cursor()
 	
 	#we can merge into 1 helper function
-	cur.execute("SELECT user_id, deleted FROM comments WHERE comment_id = :comment_id", {"comment_id": comment_id})
-	comment = cur.fetchone()
+	comment = validate_comment_access(cur, user_id, comment_id)
 	
-	if comment is None: 
-		return NOT_FOUND
-	if user_id != int(comment["user_id"]):
-		return FORBIDDEN
+	if comment in (NOT_FOUND, FORBIDDEN):
+		return comment
 		
 	cur.execute("UPDATE comments SET deleted = False WHERE comment_id = :comment_id", {"comment_id": comment_id})
 	conn.commit()
 	
-	cur.execute("SELECT comment_id, task_id, user_id, content, created_at, deleted FROM comments WHERE comment_id = :comment_id", {"comment_id": comment_id})
-	comment = cur.fetchone()
+	comment = get_comment(cur, comment_id)
 	
 	conn.close()
 	

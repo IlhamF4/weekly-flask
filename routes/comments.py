@@ -3,7 +3,7 @@ from werkzeug.exceptions import BadRequest, NotFound, Forbidden, Unauthorized
 from utility.helpers import *
 from errors import *
 from logic.auth import extract_user_id
-from logic.comments import add_comment, get_comments, delete_comment
+from logic.comments import add_comment, get_comments, delete_comment, restore_comment
 
 def get_user_id():
 	user_id = extract_user_id()
@@ -11,6 +11,20 @@ def get_user_id():
 		raise Unauthorized("invalid token")
 	
 	return user_id
+	
+
+def handle_tasks_errors(value):
+	if value == NOT_FOUND:
+		raise NotFound("task not found")
+	if value == FORBIDDEN:
+		raise Forbidden("forbidden to modify task")
+
+
+def handle_comments_errors(value):
+	if value == NOT_FOUND:
+		raise NotFound("comment not found")
+	if value == FORBIDDEN:
+		raise Forbidden("forbidden to modify comment")
 	
 
 def validate_content(value):
@@ -56,7 +70,7 @@ def validate_get_comments():
 
 
 def register_comments_route(app):
-	@app.route("/tasks/<task_id>/comments", methods=["POST"])
+	@app.route("/tasks/<int:task_id>/comments", methods=["POST"])
 	def create_comment_route(task_id):
 		user_id = get_user_id()
 		data = parse_json()
@@ -66,15 +80,17 @@ def register_comments_route(app):
 		
 		result = add_comment(user_id, task_id, content)
 		
-		if result == NOT_FOUND:
-			raise NotFound("task not found")
-		if result == FORBIDDEN:
-			raise Forbidden("forbidden to modify")
+		handle_tasks_errors(result)
 		
+		#if result == NOT_FOUND:
+#			raise NotFound("task not found")
+#		if result == FORBIDDEN:
+#			raise Forbidden("forbidden to modify")
+#		
 		return jsonify({"data": result, "message": "comment created"}), 201
 	
 	
-	@app.route("/tasks/<task_id>/comments", methods=["GET"])
+	@app.route("/tasks/<int:task_id>/comments", methods=["GET"])
 	def get_comments_route(task_id):
 		user_id = get_user_id()
 		
@@ -85,24 +101,48 @@ def register_comments_route(app):
 		limit = validated["limit"]
 		
 		result = get_comments(user_id, task_id, include_deleted, page, limit)
+		
+		handle_tasks_errors(result)
 
-		if result == NOT_FOUND:
-			raise NotFound("task not found")
-		if result == FORBIDDEN:
-			raise Forbidden("forbidden to access")
-			
-		return jsonify({"data": result, "message": "comments"}), 200
+	#	if result == NOT_FOUND:
+#			raise NotFound("task not found")
+#		if result == FORBIDDEN:
+#			raise Forbidden("forbidden to access")
+#			
+		#create metadata
+		return jsonify({
+			"data": result, 
+			"meta": {
+				"page": page, 
+				"limit": limit, 
+				"count": len(result)
+			} #is this total count or page count?
+		}), 200
 		
 	
-	@app.route("/comments/<comment_id>", methods=["DELETE"])
+	@app.route("/comments/<int:comment_id>", methods=["DELETE"])
 	def delete_comment_route(comment_id):
 		user_id = get_user_id()
 		
 		result = delete_comment(user_id, comment_id)
-
-		if result == NOT_FOUND:
-			raise NotFound("comment not found")
-		if result == FORBIDDEN:
-			raise Forbidden("forbidden to modify")
 		
-		return jsonify({"data": result, "message": "comment deleted"})
+		handle_comments_errors(result)
+
+	#	if result == NOT_FOUND:
+#			raise NotFound("comment not found")
+#		if result == FORBIDDEN:
+#			raise Forbidden("forbidden to modify")
+#		
+		return jsonify({"data": result, "message": "comment deleted"}), 200
+		
+	
+	#create restore endpoint
+	@app.route("/comments/<int:comment_id>", methods=["PATCH"])
+	def restore_comment_route(comment_id):
+		user_id = get_user_id()
+		
+		result = restore_comment(user_id, comment_id)
+		
+		handle_comments_errors(result)
+		
+		return jsonify({"data": result, "message": "comment restored"}), 200
