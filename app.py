@@ -6,6 +6,7 @@ from routes.tasks import register_tasks_route
 from routes.comments import register_comments_route
 from db import init_db
 import config
+import os
 
 app = Flask(__name__)
 
@@ -22,4 +23,5 @@ def handle_http_exception(e):
 
 if __name__ == "__main__":
 	init_db(config.DB_NAME)
-	app.run(debug=True)
+	port = int(os.getenv("PORT", 5000))
+	app.run(host=0.0.0.0, port=port)
