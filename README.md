@@ -1,4 +1,3 @@
-"""
 Task Management API
 
 Overview
@@ -25,6 +24,10 @@ python app.py
 ---
 
 Endpoints
+
+---
+
+Tasks Domain
 
 1. Create Task
 
@@ -89,6 +92,53 @@ Request body:
 4. Delete Task
 
 DELETE /tasks/<id>
+
+5. Archive Task
+
+PATCH /tasks/<id>/archive
+
+Comment cannot be created on archived task
+
+6. Unarchive Task
+
+PATCH /tasks/<id>/unarchive
+
+---
+
+Users Domain
+
+1. Create User
+
+POST /users
+
+Request body:
+
+{
+  "username": "admin"
+}
+
+2. Get Users
+
+GET /users
+
+Response example:
+
+{"data": {
+
+
+3. Update User
+
+PUT /users
+
+Request body:
+
+{
+  "username": "admin"
+}
+
+4. Delete User
+
+DELETE /users
 
 ---
 
