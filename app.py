@@ -21,7 +21,9 @@ def handle_http_exception(e):
 				"error": e.description
 			}), e.code
 
-if __name__ == "__main__":
-	init_db(config.DB_NAME)
-	port = int(os.getenv("PORT", 5000))
-	app.run(host="0.0.0.0", port=port)
+init_db(config.DB_NAME)
+
+#if __name__ == "__main__":
+#	init_db(config.DB_NAME)
+#	port = int(os.getenv("PORT", 5000))
+#	app.run(host="0.0.0.0", port=port)
