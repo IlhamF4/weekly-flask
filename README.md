@@ -18,8 +18,21 @@ Features
 
 Setup
 
-pip install flask
-python app.py
+pip install -r requirements.txt
+
+
+---
+
+Run
+
+gunicorn app:app --bind 0.0.0.0:8000
+
+---
+
+Environment Variable
+
+DB_NAME
+PORT
 
 ---
 
@@ -252,3 +265,5 @@ All endpoint or user interface is inside "route/" folder, while domain and busin
 There is 2 database, task.db for production, while test.db for test.
 
 db.py contain infrastructure code (database config)
+
+Database: prod.db (for production), dev.db (for development), test.db (for testing)

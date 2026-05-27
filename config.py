@@ -1,3 +1,3 @@
 import os
 
-DB_NAME = os.getenv("DB_NAME", "task.db")
+DB_NAME = os.getenv("DB_NAME", "dev.db")
