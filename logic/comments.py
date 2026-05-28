@@ -11,6 +11,17 @@ def row_to_list(rows):
 	return [row_to_dict(row) for row in rows]
 	
 
+def row_count(cur, conditions, params):
+	query = "SELECT COUNT(comment_id) as total_rows FROM comments"
+	
+	if conditions:
+		query += " WHERE " + " AND ".join(conditions)
+	
+	cur.execute(query, params)
+	
+	return cur.fetchone()["total_rows"]
+	
+
 def validate_comment_access(cur, user_id, comment_id):
 	cur.execute("SELECT user_id, deleted FROM comments WHERE comment_id = :comment_id", {"comment_id": comment_id})
 	comment = cur.fetchone()
@@ -62,12 +73,19 @@ def get_comments(user_id, task_id, include_deleted=False, page=1, limit=10):
 	page = max(1, page)
 	offset = (page - 1) * limit
 	
-	query = "SELECT comment_id, task_id, user_id, content, created_at FROM comments WHERE task_id = :task_id"
-	params = {"task_id": task_id}
+	query = "SELECT comment_id, task_id, user_id, content, created_at FROM comments"
+	conditions = []
+	params = {}
 	
+	conditions.append("task_id = :task_id")
+	params["task_id"] = task_id
+	
+	#defaulr behaviour is filter with deleted is false, which only shown comment that haavemt been deleted
 	if not include_deleted:
-		query += " AND deleted = :deleted"
+		conditions.append("deleted = :deleted")
 		params["deleted"] = False
+		
+	query += " WHERE " + " AND ".join(conditions)
 	
 	query += " LIMIT :limit OFFSET :offset"
 	params["limit"] = limit
@@ -75,25 +93,17 @@ def get_comments(user_id, task_id, include_deleted=False, page=1, limit=10):
 		
 	cur.execute(query, params )
 	comments = cur.fetchall()
+	total_rows = row_count(cur, conditions, params)
 	
 	conn.close()
 	
-	return row_to_list(comments)
+	return row_to_list(comments), total_rows
 	
 	
 def delete_comment(user_id, comment_id):
 	conn = get_connection(config.DB_NAME)
 	set_row_factory(conn)
 	cur = conn.cursor()
-	
-	#we can merge into 1 helper function
-	#cur.execute("SELECT user_id, deleted FROM comments WHERE comment_id = :comment_id", {"comment_id": comment_id})
-#	comment = cur.fetchone()
-#	
-#	if comment is None: 
-#		return NOT_FOUND
-#	if user_id != int(comment["user_id"]):
-#		return FORBIDDEN
 	
 	comment = validate_comment_access(cur, user_id, comment_id)
 	
@@ -103,12 +113,9 @@ def delete_comment(user_id, comment_id):
 	if bool(comment["deleted"]) is True:
 		return NOT_FOUND
 	
-	#cur.execute("DELETE FROM comments WHERE comment_id = :comment_id", {"comment_id": comment_id})
 	cur.execute("UPDATE comments SET deleted = True WHERE comment_id = :comment_id", {"comment_id": comment_id})
 	conn.commit()
 	
-	#cur.execute("SELECT comment_id, task_id, user_id, content, created_at, deleted FROM comments WHERE comment_id = :comment_id", {"comment_id": comment_id})
-#	comment = cur.fetchone()
 	comment = get_comment(cur, comment_id)
 	
 	conn.close()

@@ -10,6 +10,17 @@ def row_to_dict(row):
 	return {"id": row["id"], "title": row["title"], "done": bool(row["done"]), "user_id": row["user_id"], "archived": bool(row["archived"])}
 	
 
+def row_count(cur, conditions, params):
+	query = "SELECT COUNT(id) as total_rows FROM tasks"
+	
+	if conditions:
+		query += " WHERE " + " AND ".join(conditions)
+	
+	cur.execute(query, params)
+	
+	return cur.fetchone()["total_rows"]
+	
+
 # Check if user_id is equal to user_id of task
 def validate_task_access(cur, user_id, task_id):
 	cur.execute("SELECT id, user_id FROM tasks WHERE id = :id", {"id": task_id})
@@ -61,7 +72,7 @@ def get_tasks(user_id, done=None, search=None, sort=None, page=1, limit=10):
 	page = max(1, page)
 	offset = (page - 1) * limit
 	
-	query = "SELECT id, title, done, user_id, archived FROM tasks "
+	query = "SELECT id, title, done, user_id, archived FROM tasks"
 	params = {}
 	conditions = []
 	
@@ -74,24 +85,27 @@ def get_tasks(user_id, done=None, search=None, sort=None, page=1, limit=10):
 		conditions.append("title LIKE :search")
 		params["search"] = f"%{search}%"
 	
-	if conditions:
-		query += " WHERE " + " AND ".join(conditions)
+	#filter
+	query += " WHERE " + " AND ".join(conditions)
 		
+	#sorting
 	if sort is None:
 		query += " ORDER BY id ASC "
 	else:
 		query += f" ORDER BY id {sort} "
 	
+	#pagination
 	query += " LIMIT :limit OFFSET :offset"
 	params["limit"] = limit
 	params["offset"] = offset
 
 	cur.execute(query, params)
 	tasks = row_to_list(cur.fetchall())
+	total_rows = row_count(cur, conditions, params)
 	
 	conn.close()
 	
-	return tasks
+	return tasks, total_rows
 	
 	
 def update_task(user_id, task_id, title, done):

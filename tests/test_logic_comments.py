@@ -89,7 +89,7 @@ def test_get_comments_return_comments():
 	
 	comment = create_comment(user, task)
 	
-	result = get_comments(user["user_id"], task["id"])
+	result, total_rows = get_comments(user["user_id"], task["id"])
 	
 	assert result[0]["content"] == "test"
 	
@@ -103,7 +103,7 @@ def test_deleted_comments_hidden_by_default():
 	
 	delete_comment(user["user_id"], comment["comment_id"])
 	
-	result = get_comments(user["user_id"], task["id"])
+	result, total_rows = get_comments(user["user_id"], task["id"])
 	
 	assert result == []
 
@@ -117,7 +117,7 @@ def test_deleted_comments_hidden_when_include_deleted_is_false():
 	
 	delete_comment(user["user_id"], comment["comment_id"])
 	
-	result = get_comments(user["user_id"], task["id"], False)
+	result, total_rows = get_comments(user["user_id"], task["id"], False)
 	
 	assert result == []
 	
@@ -133,7 +133,7 @@ def test_deleted_comment_show_on_get_comments():
 	
 	delete_comment(user["user_id"], comment["comment_id"])
 	
-	result = get_comments(user["user_id"], task["id"], True)
+	result, total_rows = get_comments(user["user_id"], task["id"], True)
 	
 	assert result[0]["content"] == "test"
 	
@@ -145,9 +145,22 @@ def test_page_above_last_comment_return_empty_list():
 	
 	comment = create_comment(user, task)
 	
-	result = get_comments(user["user_id"], task["id"], page=2, limit=10)
+	result, total_rows = get_comments(user["user_id"], task["id"], page=2, limit=10)
 	
 	assert result == []
+
+
+def test_get_comments_return_data_and_total_rowss():
+	clear_tables()
+	
+	user, task = prepare_data()
+	
+	comment = create_comment(user, task)
+	
+	result, total_rowss = get_comments(user["user_id"], task["id"])
+	
+	assert result[0]["task_id"] == task["id"]
+	assert total_rowss == 1
 	
 
 def test_delete_comment_return_success():

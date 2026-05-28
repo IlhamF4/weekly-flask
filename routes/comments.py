@@ -100,7 +100,7 @@ def register_comments_route(app):
 		page = validated["page"]
 		limit = validated["limit"]
 		
-		result = get_comments(user_id, task_id, include_deleted, page, limit)
+		result, total_rows= get_comments(user_id, task_id, include_deleted, page, limit)
 		
 		handle_tasks_errors(result)
 
@@ -115,7 +115,8 @@ def register_comments_route(app):
 			"meta": {
 				"page": page, 
 				"limit": limit, 
-				"count": len(result)
+				"page_count": len(result), 
+				"total_count": total_rows
 			} #is this total count or page count?#
 		}), 200
 		

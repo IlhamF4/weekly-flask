@@ -115,14 +115,15 @@ def register_tasks_route(app):
 		page = validated["page"]
 		limit = validated["limit"]
 		
-		result = get_tasks(user_id, done, search, sort, page, limit)
+		result, total_rows = get_tasks(user_id, done, search, sort, page, limit)
 		
 		return jsonify({
 			"data": result,
 			"meta": {
 				"page": page,
 				"limit": limit,
-				"count": len(result)
+				"page_count": len(result),
+				"total_count": total_rows
 			}
 		}), 200
 	

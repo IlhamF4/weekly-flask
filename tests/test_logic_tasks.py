@@ -1,6 +1,6 @@
 import pytest
 from tests.prepare_env import *
-from logic.tasks import validate_task_access, is_task_archived, set_archive_task, add_task, delete_task
+from logic.tasks import validate_task_access, is_task_archived, set_archive_task, add_task, get_tasks, delete_task
 from logic.comments import add_comment
 from errors import *
 
@@ -41,6 +41,19 @@ def test_validate_task_access_return_success():
 	conn.close()
 	
 	assert result["id"] == task["id"]
+	
+
+def test_get_tasks_return_data_and_total_rows():
+	clear_tables()
+	
+	user, task = prepare_data()
+	
+	conn, cur = db_connection()
+	
+	result, total_rows= get_tasks(user_id=user["user_id"])
+	
+	assert result[0]["id"] == task["id"]
+	assert total_rows == 1
 	
 
 def test_is_task_archived_return_false():
