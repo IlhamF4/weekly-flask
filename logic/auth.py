@@ -1,5 +1,6 @@
 import bcrypt
 import random
+import logging
 import config
 from db import get_connection, set_row_factory
 from errors import *
@@ -14,6 +15,13 @@ def row_to_dict(row):
 
 def extract_user_id():
 	token = parse_token()
+	
+	if "Bearer" not in token:
+		logging.warning("Authorization header format is invalid")
+		return UNAUTHORIZED
+	
+	token = token[len("Bearer")+1:]
+	
 		
 	parts = token.split(",")
 	
