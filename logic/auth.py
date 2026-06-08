@@ -6,6 +6,9 @@ from db import get_connection, set_row_factory
 from errors import *
 from utility.helpers import parse_token
 from logic.users import find_user
+import logging
+
+logger = logging.getLogger(__name__)
 
 secret = ["Sauce123", "Nevermore", "LisaAnn"]
 
@@ -17,7 +20,7 @@ def extract_user_id():
 	token = parse_token()
 	
 	if "Bearer" not in token:
-		logging.warning("Authorization header format is invalid")
+		logger.warning("Authorization header format is invalid")
 		return UNAUTHORIZED
 	
 	token = token[len("Bearer")+1:]
@@ -26,11 +29,13 @@ def extract_user_id():
 	parts = token.split(",")
 	
 	if len(parts) != 2:
+		logger.warning("Authorization header format is invalid")
 		return UNAUTHORIZED
 	
 	head = parts[0]
 	
 	if head not in secret:
+		logger.warning("Authorization header format is invalid")
 		return UNAUTHORIZED
 	
 	payload = parts[1]
@@ -112,8 +117,10 @@ def login_user(username, password):
 	result = verify_password(password, hashed_pw)
 	
 	if not result:
+		logger.warning("Unauthorized login attempt")
 		return UNAUTHORIZED
 	
+	logger.info(f"User {username} successfully login")
 	token = gen_token(user["user_id"])
 	
 	return {"user": row_to_dict(user), "token": token}

@@ -6,7 +6,10 @@ from routes.tasks import register_tasks_route
 from routes.comments import register_comments_route
 from db import init_db
 import config
-import os
+import logging
+
+logging.basicConfig(filename="task_manager.log", encoding="utf-8", level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+
 
 app = Flask(__name__)
 
@@ -22,6 +25,9 @@ def handle_http_exception(e):
 			}), e.code
 
 init_db(config.DB_NAME)
+
+logger = logging.getLogger(__name__)
+logger.info(f"Application started with database {config.DB_NAME}")
 
 #if __name__ == "__main__":
 #	init_db(config.DB_NAME)

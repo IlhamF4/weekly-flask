@@ -1,9 +1,12 @@
 from flask import request, jsonify
 from werkzeug.exceptions import BadRequest, NotFound, Forbidden, Unauthorized
+import logging
 from utility.helpers import *
 from errors import *
 from logic.tasks import add_task, get_tasks, update_task, delete_task, set_archive_task
 from logic.auth import extract_user_id
+
+logger = logging.getLogger(__name__)
 
 def get_user_id():
 	user_id = extract_user_id()
@@ -15,8 +18,10 @@ def get_user_id():
 	
 def handle_task_errors(value):
 	if value == NOT_FOUND:
+		logger.info("task not found")
 		raise NotFound("task not found")
 	if value == FORBIDDEN:
+		logger.warning("Unathorized action detected")
 		raise Forbidden("forbidden to modify task")
 
 

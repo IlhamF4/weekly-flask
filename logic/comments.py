@@ -80,7 +80,7 @@ def get_comments(user_id, task_id, include_deleted=False, page=1, limit=10):
 	conditions.append("task_id = :task_id")
 	params["task_id"] = task_id
 	
-	#defaulr behaviour is filter with deleted is false, which only shown comment that haavemt been deleted
+	#default behaviour is filter with deleted is false, which only shown comment that haavemt been deleted
 	if not include_deleted:
 		conditions.append("deleted = :deleted")
 		params["deleted"] = False
@@ -128,7 +128,6 @@ def restore_comment(user_id, comment_id):
 	set_row_factory(conn)
 	cur = conn.cursor()
 	
-	#we can merge into 1 helper function
 	comment = validate_comment_access(cur, user_id, comment_id)
 	
 	if comment in (NOT_FOUND, FORBIDDEN):

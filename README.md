@@ -1,8 +1,8 @@
-﻿Task Management API
+Task Management API
 
 Overview
 
-A simple REST API for managing tasks with support for filtering, searching, sorting, and pagination.
+A simple REST API for managing tasks with support for filtering, searching, sorting, and pagination. Now include archiving task. Adding to create, show, and delete comments for task. Also added authentication using username and password and authorization using token.
 
 ---
 
@@ -88,7 +88,8 @@ Response example:
   "meta": {
 	"page": 1,
 	"limit": 10,
-	"count": 1
+	"page count": 1,
+	"total count": 1
   }
 }
 
@@ -233,7 +234,8 @@ Response examples:
   "meta": {
 	"page": 1,
 	"limit": 10,
-	"count": 1
+	"page count": 1,
+	"total count": 1
   }
 }
 
@@ -258,11 +260,9 @@ Notes
 - If a resource is not found, a "404 Not Found" is returned
 - If a resource already exist, a "409 Conflict" is returned
 
-Test is inside folder "test/", it test logic function using pytest
+Test is inside folder "tests/", it test logic function using pytest
 
 All endpoint or user interface is inside "route/" folder, while domain and business logic is inside "logic/" folder.
-
-There is 2 database, task.db for production, while test.db for test.
 
 db.py contain infrastructure code (database config)
 

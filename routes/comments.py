@@ -1,9 +1,12 @@
 from flask import request, jsonify
 from werkzeug.exceptions import BadRequest, NotFound, Forbidden, Unauthorized
+import logging
 from utility.helpers import *
 from errors import *
 from logic.auth import extract_user_id
 from logic.comments import add_comment, get_comments, delete_comment, restore_comment
+
+logger = logging.getLogger(__name__)
 
 def get_user_id():
 	user_id = extract_user_id()
@@ -15,8 +18,10 @@ def get_user_id():
 
 def handle_tasks_errors(value):
 	if value == NOT_FOUND:
+		logger.info("task not found")
 		raise NotFound("task not found")
 	if value == FORBIDDEN:
+		logger.warning("Unauthorized action detected")
 		raise Forbidden("forbidden to modify task")
 
 
@@ -82,11 +87,6 @@ def register_comments_route(app):
 		
 		handle_tasks_errors(result)
 		
-		#if result == NOT_FOUND:
-#			raise NotFound("task not found")
-#		if result == FORBIDDEN:
-#			raise Forbidden("forbidden to modify")
-#		
 		return jsonify({"data": result, "message": "comment created"}), 201
 	
 	
@@ -104,20 +104,14 @@ def register_comments_route(app):
 		
 		handle_tasks_errors(result)
 
-	#	if result == NOT_FOUND:
-#			raise NotFound("task not found")
-#		if result == FORBIDDEN:
-#			raise Forbidden("forbidden to access")
-#			
-		#create metadata
 		return jsonify({
 			"data": result, 
 			"meta": {
 				"page": page, 
 				"limit": limit, 
-				"page_count": len(result), 
-				"total_count": total_rows
-			} #is this total count or page count?#
+				"page count": len(result), 
+				"total count": total_rows
+			}
 		}), 200
 		
 	
@@ -129,15 +123,9 @@ def register_comments_route(app):
 		
 		handle_comments_errors(result)
 
-	#	if result == NOT_FOUND:
-#			raise NotFound("comment not found")
-#		if result == FORBIDDEN:
-#			raise Forbidden("forbidden to modify")
-#		
 		return jsonify({"data": result, "message": "comment deleted"}), 200
 		
 	
-	#create restore endpoint
 	@app.route("/comments/<int:comment_id>", methods=["PATCH"])
 	def restore_comment_route(comment_id):
 		user_id = get_user_id()
