@@ -43,7 +43,8 @@ def extract_user_id():
 	if not payload.isnumeric():
 		return UNAUTHORIZED
 	
-	if find_user(payload) is None:
+	if find_user(payload) == NOT_FOUND:
+		logger.warning("Token point to a nonexistent user")
 		return NOT_FOUND
 	
 	return int(payload)
