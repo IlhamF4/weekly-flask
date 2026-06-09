@@ -168,7 +168,7 @@ def register_tasks_route(app):
 		}), 200
 		
 		
-	@app.route("/tasks/<int:task_id>/archieve", methods=["PATCH"])
+	@app.route("/tasks/<int:task_id>/archive", methods=["PATCH"])
 	def archieve_route(task_id):
 		user_id = get_user_id()
 		
@@ -179,7 +179,7 @@ def register_tasks_route(app):
 		return jsonify({"data": result, "message": "task archieved"})
 	
 	
-	@app.route("/tasks/<int:task_id>/unarchieve", methods=["PATCH"])
+	@app.route("/tasks/<int:task_id>/unarchive", methods=["PATCH"])
 	def unarchieve_route(task_id):
 		user_id = get_user_id()
 		

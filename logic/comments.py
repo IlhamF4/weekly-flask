@@ -67,7 +67,7 @@ def get_comments(user_id, task_id, include_deleted=False, page=1, limit=10):
 	
 	task = validate_task_access(cur, user_id, task_id)
 	if task in (NOT_FOUND, FORBIDDEN):
-		return task
+		return task,0 #this for handling return need to be tuple
 	
 	limit = max(1, min(limit, 100))
 	page = max(1, page)

@@ -8,7 +8,7 @@ from db import init_db
 import config
 import logging
 
-logging.basicConfig(filename="task_manager.log", encoding="utf-8", level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+logging.basicConfig(encoding="utf-8", level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
 
 
 app = Flask(__name__)
