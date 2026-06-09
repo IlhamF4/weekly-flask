@@ -23,7 +23,7 @@ def handle_tasks_errors(value):
 	if value == FORBIDDEN:
 		logger.warning("Unauthorized action detected")
 		raise Forbidden("forbidden to modify task")
-0
+
 
 def handle_comments_errors(value):
 	if value == NOT_FOUND:
