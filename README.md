@@ -46,10 +46,28 @@ Tasks Domain
 
 POST /tasks
 
+example: /tasks 
+
+Header:
+Authorization: Bearer token
+Content-type: Application/Json
+
 Request body:
 
 {
   "title": "study"
+}
+
+Response -> 201 ok: 
+
+{
+	"data": {
+		"id": 1, 
+		"title": "study",
+		"done": false,
+		"archived": false,
+		"user_id": 1},
+	"message": "Task created"
 }
 
 ---
@@ -75,14 +93,20 @@ Examples:
 /tasks?page=2&limit=5
 /tasks?done=true&search=study&sort=asc&page=1&limit=5
 
-Response example:
+Header:
+Authorization: Bearer token
+Content-type: Application/Json
+
+Response -> 200 ok:
 
 {
   "data": [
     {
       "id": 1,
       "title": "study",
-      "done": false
+      "done": false,
+      "archived": false,
+      "user_id": 1
     }
   ],
   "meta": {
@@ -99,11 +123,29 @@ Response example:
 
 PUT /tasks/<id>
 
+Example: /tasks/1
+
+Header:
+Authorization: Bearer token
+Content-type: Application/Json
+
 Request body:
 
 {
   "title": "updated title",
   "done": true
+}
+
+Response -> 200 ok:
+	
+{
+	"data": {
+		"id": 1, 
+		"title": "updated title",
+		"done": true
+		"archived": false,
+		"user_id": 1},
+	"message": "Task updated"
 }
 
 ---
@@ -112,15 +154,70 @@ Request body:
 
 DELETE /tasks/<id>
 
+Example: /tasks/1
+
+Header:
+Authorization: Bearer token
+Content-type: Application/Json
+
+Response -> 200 ok:
+	
+{
+	"data": {
+		"id": 1, 
+		"title": "study",
+		"done": false,
+		"archived": false,
+		"user_id": 1},
+	"message": "Task deleted"
+}
+
 5. Archive Task
 
 PATCH /tasks/<id>/archive
+
+Example: /tasks/1/archive
+
+Header:
+Authorization: Bearer token
+Content-type: Application/Json
+
+Response -> 200 ok:
+	
+{
+	"data": {
+		"id": 1, 
+		"title": "study",
+		"done": false,
+		"archived": true,
+		"user_id": 1},
+	"message": "Task archived"
+}
 
 Comment cannot be created on archived task
 
 6. Unarchive Task
 
 PATCH /tasks/<id>/unarchive
+
+Example: /tasks/1/unarchive
+
+Header:
+	
+Authorization: Bearer token
+Content-type: Application/Json
+
+Response -> 200 ok:
+
+{
+	"data": {
+		"id": 1, 
+		"title": "study",
+		"done": false,
+		"archived": false,
+		"user_id": 1},
+	"message": "Task unarchived"
+}
 
 ---
 
@@ -183,6 +280,11 @@ POST /auth/register
 
 Password is encrypted using bcrypt
 
+Example: /auth/register
+
+Header:
+Content-type: Application/Json
+
 Request body:
 
 {
@@ -190,15 +292,38 @@ Request body:
 	"password": "abcd1234"
 }
 
+Response -> 200 ok:
+
+{
+	"data": {
+		"user_id": 1,
+		"username": "example"}
+	"message": "User registered""
+}
+
 2. Login User
 
 POST /auth/Login
+
+Example: /auth/login
+
+Header:
+Content-type: Application/Json
 
 Request body:
 
 {
 	"username": "admin", 
 	"password": "abcd1234"
+}
+
+Response -> 200 oke:
+	
+{
+	"data": {
+		"user_id": 1
+		"username": "admin"},
+	"message": "User Logged"
 }
 
 ---
@@ -209,10 +334,28 @@ Comments Domain
 
 POST /tasks/<id>/comments
 
+Example: /tasks/1/comments
+
+Header:
+Authorization: Bearer token
+Content-type: Application/Json
+
 Request body:
 
 {
 	"content": "test comment"
+}
+
+Response -> 200 ok:
+
+{
+	"data": {
+		"comment_id": 1,
+		"task_id": 4,
+		"user_id": 1,
+		"content": "test comment",
+		"created_at": 2026-06-10 08:20:34
+	"message": "Comment created"
 }
 
 2. Get Comment
@@ -228,7 +371,7 @@ Response examples:
 		"task_id": 1, 
 		"user_id": 1, 
 		"content": "test comment", 
-		"created_at": 2026-05-31
+		"created_at": 2026-05-31 08:16:40
 	}
   ],
   "meta": {
@@ -242,6 +385,25 @@ Response examples:
 3. Delete Comment
 
 DELETE /comments/<comment_id>
+
+Example: /comments/1
+
+Header:
+Authorization: Bearer token
+Content-type: Application/Json
+
+Response -> 200 ok:
+
+{
+  "data": [
+	{
+		"comment_id": 1, 
+		"task_id": 1, 
+		"user_id": 1, 
+		"content": "test comment", 
+		"created_at": 2026-05-31 08:16:40},
+	"message": "Comment deleted"
+}
 
 using soft delete flag
 

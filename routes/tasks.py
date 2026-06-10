@@ -174,7 +174,7 @@ def register_tasks_route(app):
 		
 		handle_task_errors(result)
 			
-		return jsonify({"data": result, "message": "task archieved"})
+		return jsonify({"data": result, "message": "task archived"})
 	
 	
 	@app.route("/tasks/<int:task_id>/unarchive", methods=["PATCH"])
@@ -185,4 +185,4 @@ def register_tasks_route(app):
 		
 		handle_task_errors(result)
 			
-		return jsonify({"data": result, "message": "task unarchieved"})
+		return jsonify({"data": result, "message": "task unarchived"})
