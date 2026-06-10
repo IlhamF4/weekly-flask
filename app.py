@@ -24,6 +24,11 @@ def handle_http_exception(e):
 				"error": e.description
 			}), e.code
 
+
+@app.errorhandler(Exception)
+def handle_error(e):
+	logger.exception("Unexpected error")
+
 init_db(config.DB_NAME)
 
 logger = logging.getLogger(__name__)
