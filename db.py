@@ -2,7 +2,11 @@ import sqlite3
 import config
 
 def get_connection(db_name):
-	return sqlite3.connect(db_name)
+	try:
+		return sqlite3.connect(db_name)
+	except sqlite3.Error as e:
+		logger.error(f"database error {e}")
+		
 
 def set_row_factory(conn):
 	conn.row_factory = sqlite3.Row
