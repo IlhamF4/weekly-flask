@@ -169,7 +169,7 @@ def register_tasks_route(app):
 		
 		
 	@app.route("/tasks/<int:task_id>/archive", methods=["PATCH"])
-	def archieve_route(task_id):
+	def archive_route(task_id):
 		user_id = get_user_id()
 		
 		result = set_archive_task(user_id, task_id, True)
@@ -180,7 +180,7 @@ def register_tasks_route(app):
 	
 	
 	@app.route("/tasks/<int:task_id>/unarchive", methods=["PATCH"])
-	def unarchieve_route(task_id):
+	def unarchive_route(task_id):
 		user_id = get_user_id()
 		
 		result = set_archive_task(user_id, task_id, False)
