@@ -27,9 +27,11 @@ def validate_task_access(cur, user_id, task_id):
 	task = cur.fetchone()
 	
 	if task is None:
+		logger.info("task not found")
 		return NOT_FOUND
 	#guard task["user_id"] to int
 	if user_id != task["user_id"]:
+		logger.warning("Unathorized action detected")
 		return FORBIDDEN
 	
 	return task

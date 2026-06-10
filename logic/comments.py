@@ -2,6 +2,9 @@ import config
 from db import get_connection, set_row_factory
 from logic.tasks import validate_task_access, is_task_archived
 from errors import *
+import logging
+
+logger = logging.getLogger(__name__)
 
 def row_to_dict(row):
 	return {"comment_id": row["comment_id"], "task_id": row["task_id"], "user_id": row["user_id"], "content": row["content"], "created_at": row["created_at"]}
@@ -48,6 +51,7 @@ def add_comment(user_id, task_id, content):
 		return task
 	
 	if is_task_archived(cur, task_id):
+		logger.warning("Cannot create comment on archived task")
 		return FORBIDDEN
 	
 	cur.execute("INSERT INTO comments (task_id, user_id, content) VALUES (:task_id, :user_id, :content)", {"task_id": task_id, "user_id": user_id, "content": content})
@@ -100,6 +104,7 @@ def get_comments(user_id, task_id, include_deleted=False, page=1, limit=10):
 	return row_to_list(comments), total_rows
 	
 	
+#deleted resource access is ambigous and I dont get what is the requirement
 def delete_comment(user_id, comment_id):
 	conn = get_connection(config.DB_NAME)
 	set_row_factory(conn)
