@@ -1,6 +1,9 @@
 import config
 from db import get_connection, set_row_factory
 from errors import FORBIDDEN, NOT_FOUND
+import logging
+
+logger = logging.getLogger(__name__)
 
 def row_to_list(rows):
 	return [row_to_dict(row) for row in rows]
@@ -125,6 +128,7 @@ def update_task(user_id, task_id, title, done):
 	if done is not None:
 		cur.execute("UPDATE tasks SET done = :done WHERE id = :id", {"done": done, "id": task_id})
 	conn.commit()
+	logger.info("User update task")
 	
 	task = get_task(cur, task_id)
 	
@@ -146,6 +150,7 @@ def delete_task(user_id, task_id):
 		
 	cur.execute("DELETE FROM tasks WHERE id = :id", {"id": task_id})
 	conn.commit()
+	logger.info("User delete task")
 	
 	conn.close()
 	
@@ -163,6 +168,7 @@ def set_archive_task(user_id, task_id, archived):
 		
 	cur.execute("UPDATE tasks SET archived = :archived WHERE id = :id", {"archived": archived, "id": task_id})
 	conn.commit()
+	logger.info(f"User {archived} task")
 	
 	task = get_task(cur, task_id)
 	

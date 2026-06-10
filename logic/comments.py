@@ -120,6 +120,7 @@ def delete_comment(user_id, comment_id):
 	
 	cur.execute("UPDATE comments SET deleted = True WHERE comment_id = :comment_id", {"comment_id": comment_id})
 	conn.commit()
+	logger.info("User deleted comment")
 	
 	comment = get_comment(cur, comment_id)
 	
@@ -140,6 +141,7 @@ def restore_comment(user_id, comment_id):
 		
 	cur.execute("UPDATE comments SET deleted = False WHERE comment_id = :comment_id", {"comment_id": comment_id})
 	conn.commit()
+	logger.info("User restored comment")
 	
 	comment = get_comment(cur, comment_id)
 	

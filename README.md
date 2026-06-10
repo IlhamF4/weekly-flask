@@ -15,24 +15,29 @@ Features
 - Pagination support ("page", "limit")
 
 ---
+Deployment
+
+
+Platform
+Render
+
+Production Server
+Gunicorn
 
 Setup
-
 pip install -r requirements.txt
 
-
----
-
 Run
-
 gunicorn app:app --bind 0.0.0.0:8000
-
----
 
 Environment Variable
 
 DB_NAME
 PORT
+
+Limitation:
+-sqlite data is not persistent on render
+-data may reset after suspend/resume
 
 ---
 
