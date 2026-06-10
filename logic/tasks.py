@@ -168,6 +168,7 @@ def set_archive_task(user_id, task_id, archived):
 		
 	cur.execute("UPDATE tasks SET archived = :archived WHERE id = :id", {"archived": archived, "id": task_id})
 	conn.commit()
+	logger.info(f"User {archived} task")
 	
 	state = "unarchived"
 	if archived:
