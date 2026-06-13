@@ -109,8 +109,8 @@ def register_comments_route(app):
 			"meta": {
 				"page": page, 
 				"limit": limit, 
-				"page count": len(result), 
-				"total count": total_rows
+				"page_count": len(result), 
+				"total_count": total_rows
 			}
 		}), 200
 		
@@ -126,7 +126,7 @@ def register_comments_route(app):
 		return jsonify({"data": result, "message": "comment deleted"}), 200
 		
 	
-	@app.route("/comments/<int:comment_id>", methods=["PATCH"])
+	@app.route("/comments/<int:comment_id>/restore", methods=["PATCH"])
 	def restore_comment_route(comment_id):
 		user_id = get_user_id()
 		

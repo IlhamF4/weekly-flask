@@ -1,5 +1,8 @@
 import sqlite3
 import config
+import logging
+
+logger = logging.getLogger(__name__)
 
 def get_connection(db_name):
 	try:

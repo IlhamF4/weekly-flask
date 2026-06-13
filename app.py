@@ -10,6 +10,10 @@ import logging
 
 logging.basicConfig(encoding="utf-8", level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
 
+logger = logging.getLogger(__name__)
+logger.info(f"Application started with database {config.DB_NAME}")
+
+init_db(config.DB_NAME)
 
 app = Flask(__name__)
 
@@ -28,11 +32,10 @@ def handle_http_exception(e):
 @app.errorhandler(Exception)
 def handle_error(e):
 	logger.exception("Unexpected error")
+	return jsonify({
+		"500 Internal server error"
+	}), 500
 
-init_db(config.DB_NAME)
-
-logger = logging.getLogger(__name__)
-logger.info(f"Application started with database {config.DB_NAME}")
 
 #if __name__ == "__main__":
 #	init_db(config.DB_NAME)
