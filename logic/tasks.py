@@ -10,11 +10,11 @@ def row_to_list(rows):
 
 
 def row_to_dict(row):
-	return {"id": row["id"], "title": row["title"], "done": bool(row["done"]), "user_id": row["user_id"], "archived": bool(row["archived"])}
+	return {"task_id": row["task_id"], "title": row["title"], "done": bool(row["done"]), "user_id": row["user_id"], "archived": bool(row["archived"])}
 	
 
 def row_count(cur, conditions, params):
-	query = "SELECT COUNT(id) as total_rows FROM tasks"
+	query = "SELECT COUNT(task_id) as total_rows FROM tasks"
 	
 	if conditions:
 		query += " WHERE " + " AND ".join(conditions)
@@ -26,7 +26,7 @@ def row_count(cur, conditions, params):
 
 # Check if user_id is equal to user_id of task
 def validate_task_access(cur, user_id, task_id):
-	cur.execute("SELECT id, user_id FROM tasks WHERE id = :id", {"id": task_id})
+	cur.execute("SELECT task_id, user_id FROM tasks WHERE task_id = :task_id", {"task_id": task_id})
 	task = cur.fetchone()
 	
 	if task is None:
@@ -41,14 +41,14 @@ def validate_task_access(cur, user_id, task_id):
 
 
 def is_task_archived(cur, task_id):
-	cur.execute("SELECT id, archived FROM tasks WHERE id = :id", {"id": task_id})
+	cur.execute("SELECT task_id, archived FROM tasks WHERE task_id = :task_id", {"task_id": task_id})
 	task = cur.fetchone()
 	
 	return bool(task["archived"])
 
 
 def get_task(cur, task_id):
-	cur.execute("SELECT id, title, done, user_id, archived FROM tasks WHERE id = :id", {"id": task_id})
+	cur.execute("SELECT task_id, title, done, user_id, archived FROM tasks WHERE task_id = :task_id", {"task_id": task_id})
 	
 	return cur.fetchone()
 	
@@ -77,7 +77,7 @@ def get_tasks(user_id, done=None, search=None, sort=None, page=1, limit=10):
 	page = max(1, page)
 	offset = (page - 1) * limit
 	
-	query = "SELECT id, title, done, user_id, archived FROM tasks"
+	query = "SELECT task_id, title, done, user_id, archived FROM tasks"
 	params = {}
 	conditions = []
 	
@@ -95,9 +95,9 @@ def get_tasks(user_id, done=None, search=None, sort=None, page=1, limit=10):
 		
 	#sorting
 	if sort is None:
-		query += " ORDER BY id ASC "
+		query += " ORDER BY task_id ASC "
 	else:
-		query += f" ORDER BY id {sort} "
+		query += f" ORDER BY task_id {sort} "
 	
 	#pagination
 	query += " LIMIT :limit OFFSET :offset"
@@ -124,9 +124,9 @@ def update_task(user_id, task_id, title, done):
 		
 	#use build query here
 	if title is not None:
-		cur.execute("UPDATE tasks SET title = :title WHERE id = :id", {"title": title, "id": task_id})
+		cur.execute("UPDATE tasks SET title = :title WHERE task_id = :task_id", {"title": title, "task_id": task_id})
 	if done is not None:
-		cur.execute("UPDATE tasks SET done = :done WHERE id = :id", {"done": done, "id": task_id})
+		cur.execute("UPDATE tasks SET done = :done WHERE task_id = :task_id", {"done": done, "task_id": task_id})
 	conn.commit()
 	logger.info("User update task")
 	
@@ -148,7 +148,7 @@ def delete_task(user_id, task_id):
 	
 	task = get_task(cur, task_id)
 		
-	cur.execute("DELETE FROM tasks WHERE id = :id", {"id": task_id})
+	cur.execute("DELETE FROM tasks WHERE task_id = :task_id", {"task_id": task_id})
 	conn.commit()
 	logger.info("User delete task")
 	
@@ -166,7 +166,7 @@ def set_archive_task(user_id, task_id, archived):
 	if task in (NOT_FOUND, FORBIDDEN):
 		return task
 		
-	cur.execute("UPDATE tasks SET archived = :archived WHERE id = :id", {"archived": archived, "id": task_id})
+	cur.execute("UPDATE tasks SET archived = :archived WHERE task_id = :task_id", {"archived": archived, "task_id": task_id})
 	conn.commit()
 	logger.info(f"User {archived} task")
 	

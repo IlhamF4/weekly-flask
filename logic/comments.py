@@ -57,7 +57,7 @@ def add_comment(user_id, task_id, content):
 	cur.execute("INSERT INTO comments (task_id, user_id, content) VALUES (:task_id, :user_id, :content)", {"task_id": task_id, "user_id": user_id, "content": content})
 	conn.commit()
 	
-	cur.execute("SELECT comment_id, task_id, user_id, content, created_at FROM comments WHERE comment_id = :id", {"id": cur.lastrowid})
+	cur.execute("SELECT comment_id, task_id, user_id, content, created_at FROM comments WHERE comment_id = :comment_id", {"comment_id": cur.lastrowid})
 	comment = cur.fetchone()
 	conn.close()
 	

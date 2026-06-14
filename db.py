@@ -20,7 +20,7 @@ def init_db(db_name):
 	
 	cur.execute("""
 	CREATE TABLE IF NOT EXISTS tasks(
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		task_id INTEGER PRIMARY KEY AUTOINCREMENT,
 		title TEXT,
 		done BOOLEAN DEFAULT FALSE,
 		user_id INTEGER,
