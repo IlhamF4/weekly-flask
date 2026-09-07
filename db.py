@@ -1,6 +1,7 @@
 import sqlite3
 import config
 import logging
+import psycopg
 
 logger = logging.getLogger(__name__)
 
@@ -9,7 +10,7 @@ def get_connection(db_name):
 		return sqlite3.connect(db_name)
 	except sqlite3.Error as e:
 		logger.error(f"database error {e}")
-		
+
 
 def set_row_factory(conn):
 	conn.row_factory = sqlite3.Row
@@ -49,3 +50,12 @@ def init_db(db_name):
 	
 	conn.commit()
 	conn.close()
+	
+def get_connection_postgre():
+	return psycopg.connect(conninfo=config.DB_URL, user="admin", password="admin23") 
+	
+
+def init_db_postgre():
+	return config.DB_NAME
+	
+#change config.DB_NAME to inside db .py so that it doesnt hardcoded inside funvtion
