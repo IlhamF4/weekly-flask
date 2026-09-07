@@ -51,11 +51,47 @@ def init_db(db_name):
 	conn.commit()
 	conn.close()
 	
+
 def get_connection_postgre():
-	return psycopg.connect(conninfo=config.DB_URL, user="admin", password="admin23") 
+	conn = psycopg.connect(conninfo=config.DB_URL, user="admin", password="admin123")
+	cur = conn.cursor()
+	return conn, cur
 	
 
 def init_db_postgre():
-	return config.DB_NAME
+	conn, cur = get_connection_postgre()
+
+	cur.execute("""
+		CREATE TABLE IF NOT EXISTS tasks (
+			task_id SERIAL PRIMARY KEY,
+			title VARCHAR(50) NOT NULL,
+			done BOOLEAN DEFAULT FALSE,
+			user_id INT,
+			archived BOOLEAN DEFAULT FALSE
+		)
+	""")
+
+	cur.execute("""
+		CREATE TABLE IF NOT EXISTS users (
+			user_id SERIAL PRIMARY KEY,
+			username VARCHAR(50) UNIQUE NOT NULL,
+			password VARCHAR(50) NOT NULL
+		)
+	""")
+
+	cur.execute("""
+		CREATE TABLE IF NOT EXISTS comments (
+			comment_id SERIAL PRIMARY KEY,
+			task_id INT,
+			user_id INT,
+			content TEXT,
+			created_at TIMESTAMP NOT NULL,
+			deleted BOOLEAN DEFAULT FALSE
+		)
+	""")
+	conn.commit()
+	conn.close()
+
+print(init_db_postgre())
 	
 #change config.DB_NAME to inside db .py so that it doesnt hardcoded inside funvtion
